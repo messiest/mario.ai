@@ -120,7 +120,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             entropy = -(log_prob * prob).sum(1, keepdim=True)
             entropies.append(entropy)
 
-            print(f"MODEL {rank} PAST ACTION SELECTION", action_out)
+            print(f"MODEL {rank} PAST ACTION SELECTION")
 
             if select_sample and random.random() > get_epsilon(step):
                 # action = prob.multinomial(num_samples=1).detach()
@@ -132,6 +132,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
                 print(f"MODEL {rank} BEST ACTION")
 
 
+            print("ACTION", action, type(action))
             log_prob = log_prob.gather(1, action)
 
             print(f"MODEL {rank} LOG PROB")
