@@ -1,6 +1,7 @@
 import os
 import csv
 import time
+import math
 import requests
 
 import numpy as np
@@ -52,6 +53,9 @@ def build_roster(n=128, save_file='assets/roster.csv'):
             writer.writerow([agent_id])
 
     return
+
+def get_epsilon(step, eps_end=0.05, eps_start=0.9, eps_decay=200):
+    return eps_end + (eps_start - eps_end) * math.exp(-1 * step / eps_decay)
 
 
 

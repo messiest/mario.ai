@@ -1,6 +1,7 @@
 import os
-import time
 import csv
+import time
+import random
 from fnmatch import filter
 from collections import deque
 from itertools import count
@@ -19,7 +20,7 @@ from actor_critic import ActorCritic
 from mario_actions import ACTIONS
 from mario_wrapper import create_mario_env
 from shared_adam import SharedAdam
-from utils import fetch_name, FontColor
+from utils import fetch_name, get_epsilon, FontColor
 
 
 def ensure_shared_grads(model, shared_model):
@@ -117,14 +118,12 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             entropy = -(log_prob * prob).sum(1, keepdim=True)
             entropies.append(entropy)
 
-            if select_sample:  # TODO: add in greedy epsilon schedule
+            if select_sample and random.random() > get_epsilon(step):
                 # action = prob.multinomial(num_samples=1).detach()
                 action = torch.randint(0, len(ACTIONS), (1,1))
             else:
-                # action = prob.max(-1, keepdim=True)[1].detach()
-                # action = prob.multinomial(num_samples=1).detach()
                 action = choose_action(model, state, hx, cx)
-                model.train()
+                model.train()  # may be redundant
 
             log_prob = log_prob.gather(1, action)
 
@@ -244,11 +243,11 @@ def test(rank, args, shared_model, counter):
 
         if not os.path.exists(save_file):
             headers = [
-                        'ID',
-                        'Time',
-                        'Steps',
-                        'Total Reward',
-                        'Episode Length',
+                        'id',
+                        'time',
+                        'steps',
+                        'reward',
+                        'episode_length',
                         'coins',
                         'flag_get',
                         'life',
@@ -274,23 +273,23 @@ def test(rank, args, shared_model, counter):
             done = True
 
         if done:
-            stop_time = time.time()
-            print("{} | ID: {}, Time: {}, FPS: {: 4.2f}, Reward: {: 6.2f}, Episode Length: {: 4d}, Progress: {: 3.2f}%".format(
-                    args.env_name,
-                    args.model_id,
-                    time.strftime("%H:%M:%Ss", time.gmtime(stop_time - start_time)),
-                    counter.value / (stop_time - start_time),
-                    reward_sum,
-                    episode_length,
-                    (info['x_pos'] / 3225) * 100,
-                ),
+            t = time.time() - start_time
+
+            print(
+                f"{args.env_name} | " + \
+                f"ID: {args.model_id}, " + \
+                f"Time: {time.strftime('%H:%M:%Ss', time.gmtime(t))}, " + \
+                f"FPS: {counter.value/t: 4.2f}, " + \
+                f"Reward: {reward_sum: 6.2f}, " + \
+                f"Episode Length: {episode_length: 4d}, " + \
+                f"Progress: {(info['x_pos'] / 3225) * 100: 3.2f}%",
                 end='\r',
                 flush=True,
             )
 
             data = [
                 args.model_id,  # ID
-                stop_time - start_time,  # Time
+                t,  # Time
                 counter.value,  # Total Steps
                 reward_sum,  # Cummulative Reward
                 episode_length,  # Episode Step Length
