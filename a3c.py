@@ -69,14 +69,11 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
     for t in count(start=counter.value):
         if rank == 0:
             if t % args.save_interval == 0 and t > 0:
-                for file in filter(os.listdir('checkpoints/'), f"{args.env_name}_{args.model_id}_a3c_params.tar"):
-                    os.remove(os.path.join('checkpoints', file))
                 torch.save(
                     dict(
                         env=args.env_name,
                         id=args.model_id,
-                        episode=t,
-                        step=episode_length,
+                        step=counter.value,
                         model_state_dict=shared_model.state_dict(),
                         optimizer_state_dict=optimizer.state_dict(),
                     ),
@@ -84,8 +81,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
                 )
 
         if t % args.save_interval == 0 and t > 0:  # and rank == 1:
-            for file in filter(os.listdir('checkpoints/'), f"{args.env_name}_{args.model_id}_a3c_params.tar"):
-                os.remove(os.path.join('checkpoints', file))
             torch.save(
                 dict(
                     env=args.env_name,
@@ -122,7 +117,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             entropy = -(log_prob * prob).sum(1, keepdim=True)
             entropies.append(entropy)
 
-            if select_sample:
+            if select_sample:  # TODO: add in greedy epsilon schedule
                 # action = prob.multinomial(num_samples=1).detach()
                 action = torch.randint(0, len(ACTIONS), (1,1))
             else:
@@ -229,8 +224,10 @@ def test(rank, args, shared_model, counter):
 
         else:
             with torch.no_grad():
-                cx = Variable(cx.data).type(FloatTensor)
-                hx = Variable(hx.data).type(FloatTensor)
+                # cx = Variable(cx.data).type(FloatTensor)
+                # hx = Variable(hx.data).type(FloatTensor)
+                cx = Variable(cx.detach()).type(FloatTensor)
+                hx = Variable(hx.detach()).type(FloatTensor)
 
         with torch.no_grad():
             state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
@@ -246,17 +243,32 @@ def test(rank, args, shared_model, counter):
         save_file = os.getcwd() + f'/save/{args.env_name}_performance.csv'
 
         if not os.path.exists(save_file):
-            headers = ['ID', 'Time', 'Steps', 'Total Reward', 'Episode Length', 'coins', 'flag_get', 'life', 'score', 'stage', 'status', 'time', 'world', 'x_pos']
+            headers = [
+                        'ID',
+                        'Time',
+                        'Steps',
+                        'Total Reward',
+                        'Episode Length',
+                        'coins',
+                        'flag_get',
+                        'life',
+                        'score',
+                        'stage',
+                        'status',
+                        'time',
+                        'world',
+                        'x_pos',
+                ]
             with open(save_file, 'a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow(headers)
 
         env.render()
-        done = done or episode_length >= args.max_episode_length or info['flag_get']
+        done = done or episode_length >= args.max_episode_length # or info['flag_get']
 
         reward_sum += reward
 
-        actions.append(action[0, 0])
+        actions.append(action)
 
         if actions.count(actions[0]) == actions.maxlen:
             done = True
@@ -273,14 +285,15 @@ def test(rank, args, shared_model, counter):
                     (info['x_pos'] / 3225) * 100,
                 ),
                 end='\r',
+                flush=True,
             )
 
             data = [
                 args.model_id,  # ID
                 stop_time - start_time,  # Time
-                counter.value,  # Episodes?
-                reward_sum,
-                episode_length,
+                counter.value,  # Total Steps
+                reward_sum,  # Cummulative Reward
+                episode_length,  # Episode Step Length
                 info['coins'],
                 info['flag_get'],
                 info['life'],
