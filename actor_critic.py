@@ -58,10 +58,18 @@ class ActorCritic(nn.Module):
     def forward(self, inputs):
         print("IN FORWARD")
         x, (hx, cx) = inputs
+
+        print("x", type(x))
         print("IN FORWARD 2")
         x = F.elu(self.conv1(x))
+        print("CONV 1")
+
         x = F.elu(self.conv2(x))
+        print("CONV 2")
+
         x = F.elu(self.conv3(x))
+        print("CONV 3")
+
         x = F.elu(self.conv4(x))
         print("IN FORWARD 3")
 
