@@ -94,8 +94,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             )
         # env.render()  # don't render training environments
 
-        print("MODEL {rank} PAST LOAD")
-
         model.load_state_dict(shared_model.state_dict())
         if done:
             cx = torch.zeros(1, 512)
@@ -110,7 +108,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
         entropies = []
 
         for step in range(args.num_steps):
-            print(f"MODEL {rank} IN EPISODE")
             episode_length += 1
 
             # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
@@ -124,7 +121,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
 
             if select_sample and random.random() > get_epsilon(step):
                 # action = prob.multinomial(num_samples=1).detach()
-                action = torch.randint(0, len(ACTIONS), (1,1))
+                action = torch.randint(0, env.action_space.n, (1,1))
             else:
                 action = choose_action(model, state, hx, cx)
                 model.train()  # may be redundant
@@ -136,6 +133,10 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             state, reward, done, info = env.step(action.item())
             done = done or episode_length >= args.max_episode_length
             reward = max(min(reward, 15), -15)  # as per gym-super-mario-bros
+
+
+            print(f"MODEL {rank} PAST ACTION SELECTION", action_out)
+
 
             with lock:
                 counter.value += 1  # episodes?
@@ -187,6 +188,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
         ensure_shared_grads(model, shared_model)
 
         optimizer.step()
+
+
+        print(f"MODEL {rank} HERE")
 
 
 def test(rank, args, shared_model, counter):
