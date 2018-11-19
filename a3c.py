@@ -52,7 +52,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
 
     # env.seed(args.seed + rank)
 
-    model = ActorCritic(env.observation_space.shape[0], len(ACTIONS))
+    model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
 
     if torch.cuda.is_available():
         model.cuda()
@@ -124,6 +124,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             else:
                 action = choose_action(model, state, hx, cx)
                 model.train()  # may be redundant
+
+            print("ACTION", type(action))
 
             log_prob = log_prob.gather(1, action)
 
