@@ -56,26 +56,29 @@ class ActorCritic(nn.Module):
         # self.train()  # enter training mode
 
     def forward(self, inputs):
-        print("IN FORWARD")
-        x, (hx, cx) = inputs
+        try:
+            print("IN FORWARD")
+            x, (hx, cx) = inputs
 
-        print("x", type(x))
-        print("IN FORWARD 2")
-        x = F.elu(self.conv1(x))
-        print("CONV 1")
+            print("x", type(x))
+            print("IN FORWARD 2")
+            x = F.elu(self.conv1(x))
+            print("CONV 1")
 
-        x = F.elu(self.conv2(x))
-        print("CONV 2")
+            x = F.elu(self.conv2(x))
+            print("CONV 2")
 
-        x = F.elu(self.conv3(x))
-        print("CONV 3")
+            x = F.elu(self.conv3(x))
+            print("CONV 3")
 
-        x = F.elu(self.conv4(x))
-        print("IN FORWARD 3")
+            x = F.elu(self.conv4(x))
+            print("IN FORWARD 3")
 
-        x = x.view(-1, 32 * 6 * 6)
-        hx, cx = self.lstm(x, (hx, cx))
+            x = x.view(-1, 32 * 6 * 6)
+            hx, cx = self.lstm(x, (hx, cx))
 
-        x = hx
+            x = hx
 
-        return self.critic_linear(x), self.actor_linear(x), (hx, cx)
+            return self.critic_linear(x), self.actor_linear(x), (hx, cx)
+        except Exception as e:
+            print(e)

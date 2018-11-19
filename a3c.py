@@ -93,7 +93,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
                 os.path.join("checkpoints", f"{args.env_name}_{args.model_id}_a3c_params.tar")
             )
         # env.render()  # don't render training environments
-        print(f"MODEL {rank} PAST SAVING")
         model.load_state_dict(shared_model.state_dict())
         if done:
             cx = torch.zeros(1, 512)
@@ -107,13 +106,12 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
         rewards = []
         entropies = []
 
-        print(f"MODEL {rank} IN EPISODE")
         for step in range(args.num_steps):
             episode_length += 1
 
-            state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
-            value, logit, (hx, cx) = model((state_inp, (hx, cx)))
-            # value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
+            # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
+            # value, logit, (hx, cx) = model((state_inp, (hx, cx)))
+            value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
             print(f"MODEL {rank} past forward pass")
 
@@ -122,35 +120,20 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             entropy = -(log_prob * prob).sum(1, keepdim=True)
             entropies.append(entropy)
 
-            print(f"MODEL {rank} PAST ACTION SELECTION")
-
             if select_sample and random.random() > get_epsilon(step):
                 # action = prob.multinomial(num_samples=1).detach()
                 action = torch.randint(0, env.action_space.n, (1,1))
-                print(f"MODEL {rank} RANDOM SAMPLE")
             else:
                 action = choose_action(model, state, hx, cx)
                 model.train()  # may be redundant
-                print(f"MODEL {rank} BEST ACTION")
 
-
-            print("ACTION", action, type(action))
             log_prob = log_prob.gather(1, action)
 
-            print(f"MODEL {rank} LOG PROB")
-
-
             action_out = ACTIONS[action]
-
-            print("ACTION OUT", action_out)
 
             state, reward, done, info = env.step(action.item())
             done = done or episode_length >= args.max_episode_length
             reward = max(min(reward, 15), -15)  # as per gym-super-mario-bros
-
-
-            print(f"MODEL {rank} PAST ACTION SELECTION", action_out)
-
 
             with lock:
                 counter.value += 1  # episodes?
