@@ -93,6 +93,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
                 os.path.join("checkpoints", f"{args.env_name}_{args.model_id}_a3c_params.tar")
             )
         # env.render()  # don't render training environments
+
+        print("MODEL {rank} PAST LOAD")
+
         model.load_state_dict(shared_model.state_dict())
         if done:
             cx = torch.zeros(1, 512)
@@ -107,6 +110,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
         entropies = []
 
         for step in range(args.num_steps):
+            print(f"MODEL {rank} IN EPISODE")
             episode_length += 1
 
             # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
