@@ -58,7 +58,7 @@ class ActorCritic(nn.Module):
     def forward(self, inputs):
         try:
             print("IN FORWARD")
-            x, (hx, cx) = inputs
+            x.astype(torch.FloatTensor), (hx, cx) = inputs
 
             print("x", type(x))
             print("IN FORWARD 2")
