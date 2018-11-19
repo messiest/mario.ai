@@ -28,7 +28,7 @@ class FontColor:
 
 def fetch_name(roster_file='assets/roster.csv'):
     global ROSTER
-    sample = np.random.choice(roster, 1, replace=False)
+    sample = np.random.choice(ROSTER, 1, replace=False)
     return sample[0]
 
 def build_roster(n=128, save_file='assets/roster.csv'):
