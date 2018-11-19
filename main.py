@@ -13,7 +13,6 @@ from fuzzywuzzy import process
 from actor_critic import ActorCritic
 from shared_adam import SharedAdam
 from mario_wrapper import create_mario_env
-from mario_actions import ACTIONS
 from a3c import train, test
 from utils import FontColor, fetch_name
 
@@ -66,7 +65,7 @@ def main(args):
     if args.record:
         env = gym.wrappers.Monitor(env, "playback", force=True)
 
-    shared_model = ActorCritic(env.observation_space.shape[0], len(ACTIONS))
+    shared_model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
     optimizer = SharedAdam(shared_model.parameters(), lr=args.lr)
 
     if args.load_model:
@@ -125,7 +124,7 @@ def main(args):
             )
         p.start()
         processes.append(p)
-        
+
     for p in processes:
         p.join()
 

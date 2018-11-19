@@ -40,7 +40,7 @@ class ProcessMarioFrame(gym.Wrapper):
     def step(self, action):
         obs, reward, is_done, info = self.env.step(action)
 
-        reward = min(max((info['x_pos'] - self.prev_dist), 0), 2)
+        reward += min(max((info['x_pos'] - self.prev_dist), 0), 2)
         self.prev_dist = info['x_pos']
 
         reward += (self.prev_time - info['time']) * -0.1
@@ -55,11 +55,9 @@ class ProcessMarioFrame(gym.Wrapper):
         if is_done:
             if info['x_pos'] >= 3225:
                 reward += 50
-                # reward += 15
 
             else:
                 reward -= 50
-                # reward -= 15
 
         return _process_frame(obs), reward, is_done, info
 
@@ -149,6 +147,5 @@ def wrap_mario(env):
 def create_mario_env(env_id):
     env = gym_super_mario_bros.make(env_id)
     env = BinarySpaceToDiscreteSpaceEnv(env, COMPLEX_MOVEMENT)
-    # env = gym.wrappers.Monitor(env, 'playback/', force=True)
     env = wrap_mario(env)
     return env

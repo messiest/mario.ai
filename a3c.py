@@ -36,19 +36,6 @@ def choose_action(model, state, hx, cx):
 
     return action
 
-def _print():
-    print("{} | ID: {}, Time: {}, Num Steps: {}, FPS: {:.2f}, Reward: {:.2f}, Episode Length: {}, Progress: {: 3.2f}%".format(
-            args.env_name,
-            args.model_id,
-            time.strftime("%Hh %Mm %Ss", time.gmtime(stop_time - start_time)),
-            counter.value,
-            counter.value / (stop_time - start_time),
-            reward_sum,
-            episode_length,
-            (info['x_pos'] / 3225) * 100,
-        ),
-        end='\r',
-    )
 
 def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample=True):
     torch.manual_seed(args.seed + rank)
@@ -142,6 +129,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
                 # action = prob.max(-1, keepdim=True)[1].detach()
                 # action = prob.multinomial(num_samples=1).detach()
                 action = choose_action(model, state, hx, cx)
+                model.train()
 
             log_prob = log_prob.gather(1, action)
 
@@ -255,7 +243,7 @@ def test(rank, args, shared_model, counter):
 
         state, reward, done, info = env.step(action.item())
 
-        save_file = os.getcwd() + f'/save/{args.model_id}_performance.csv'
+        save_file = os.getcwd() + f'/save/{args.env_name}_performance.csv'
 
         if not os.path.exists(save_file):
             headers = ['ID', 'Time', 'Steps', 'Total Reward', 'Episode Length', 'coins', 'flag_get', 'life', 'score', 'stage', 'status', 'time', 'world', 'x_pos']
@@ -264,7 +252,7 @@ def test(rank, args, shared_model, counter):
                 writer.writerow(headers)
 
         env.render()
-        done = done or episode_length >= args.max_episode_length
+        done = done or episode_length >= args.max_episode_length or info['flag_get']
 
         reward_sum += reward
 
@@ -275,7 +263,7 @@ def test(rank, args, shared_model, counter):
 
         if done:
             stop_time = time.time()
-            print("{} | ID: {}, Time: {}, FPS: {:4.2f}, Reward: {:6.2f}, Episode Length: {:4d}, Progress: {:3.2f}%".format(
+            print("{} | ID: {}, Time: {}, FPS: {: 4.2f}, Reward: {: 6.2f}, Episode Length: {: 4d}, Progress: {: 3.2f}%".format(
                     args.env_name,
                     args.model_id,
                     time.strftime("%H:%M:%Ss", time.gmtime(stop_time - start_time)),

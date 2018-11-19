@@ -3,6 +3,7 @@ NOTES.md
 playback/openaigym.*
 TEST.py
 deprecated/
+records/
 
 # macOS
 .DS_Store
