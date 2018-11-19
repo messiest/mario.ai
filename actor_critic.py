@@ -53,7 +53,7 @@ class ActorCritic(nn.Module):
         self.lstm.bias_ih.data.fill_(0)
         self.lstm.bias_hh.data.fill_(0)
 
-        # self.train()  # enter training mode
+        self.train()  # enter training mode
 
     def forward(self, inputs):
         print("IN FORWARD")
