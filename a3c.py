@@ -115,6 +115,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             # value, logit, (hx, cx) = model((state_inp, (hx, cx)))
             value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
+            print(f"MODEL {rank} past forward pass")
+
             prob = F.softmax(logit, dim=-1)
             log_prob = F.log_softmax(logit, dim=-1)
             entropy = -(log_prob * prob).sum(1, keepdim=True)
