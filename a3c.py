@@ -119,16 +119,26 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             entropy = -(log_prob * prob).sum(1, keepdim=True)
             entropies.append(entropy)
 
+            print(f"MODEL {rank} PAST ACTION SELECTION", action_out)
+
             if select_sample and random.random() > get_epsilon(step):
                 # action = prob.multinomial(num_samples=1).detach()
                 action = torch.randint(0, env.action_space.n, (1,1))
+                print(f"MODEL {rank} RANDOM SAMPLE")
             else:
                 action = choose_action(model, state, hx, cx)
                 model.train()  # may be redundant
+                print(f"MODEL {rank} BEST ACTION")
+
 
             log_prob = log_prob.gather(1, action)
 
+            print(f"MODEL {rank} LOG PROB")
+
+
             action_out = ACTIONS[action]
+
+            print("ACTION OUT", action_out)
 
             state, reward, done, info = env.step(action.item())
             done = done or episode_length >= args.max_episode_length
