@@ -111,9 +111,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
         for step in range(args.num_steps):
             episode_length += 1
 
-            # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
-            # value, logit, (hx, cx) = model((state_inp, (hx, cx)))
-            value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
+            state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
+            value, logit, (hx, cx) = model((state_inp, (hx, cx)))
+            # value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
             print(f"MODEL {rank} past forward pass")
 
