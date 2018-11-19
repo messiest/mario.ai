@@ -4,6 +4,7 @@ playback/openaigym.*
 TEST.py
 deprecated/
 records/
+checkpoints/*.tar
 
 # macOS
 .DS_Store
