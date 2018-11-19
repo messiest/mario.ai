@@ -125,8 +125,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
                 action = choose_action(model, state, hx, cx)
                 model.train()  # may be redundant
 
-            print("ACTION", type(action))
-
             log_prob = log_prob.gather(1, action)
 
             action_out = ACTIONS[action]
