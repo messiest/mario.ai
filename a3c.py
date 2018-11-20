@@ -113,6 +113,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
         for step in range(args.num_steps):
             episode_length += 1
 
+            print("Pre Forward")
+
             state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
             value, logit, (hx, cx) = model((state_inp, (hx, cx)))
 
