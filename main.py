@@ -8,7 +8,6 @@ import tqdm
 import gym
 import torch
 import torch.multiprocessing as _mp
-from fuzzywuzzy import process
 
 from actor_critic import ActorCritic
 from shared_adam import SharedAdam
@@ -47,12 +46,8 @@ args = parser.parse_args()
 mp = _mp.get_context('spawn')
 
 
-def restore_checkpoint(env_id, dir=args.checkpoint_dir):
-    print("ENV_ID", env_id)
-    file, p = process.extractOne(
-        env_id + '_a3c_params_*.tar',
-        os.listdir(dir)
-    )
+def restore_checkpoint(file, dir=args.checkpoint_dir):
+    print("Restoring Checkpoint:", file)
     checkpoint = torch.load(os.path.join(dir, file))
     return checkpoint
 
