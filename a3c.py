@@ -106,7 +106,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
 
             # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
 
-            print("INPUTS", type(state_inp), type(hx), type(cx))
+            print("INPUTS", type(state), type(hx), type(cx))
 
             # value, logit, (hx, cx) = model((state_inp, (hx, cx)))
             value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
