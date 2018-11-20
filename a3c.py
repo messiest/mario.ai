@@ -20,7 +20,7 @@ from actor_critic import ActorCritic
 from mario_actions import ACTIONS
 from mario_wrapper import create_mario_env
 from shared_adam import SharedAdam
-from utils import fetch_name, get_epsilon, FontColor
+from utils import fetch_name, get_epsilon, FontColor, save_checkpoint
 
 
 def ensure_shared_grads(model, shared_model):
@@ -54,11 +54,13 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
 
-    if torch.cuda.is_available():
-        model.cuda()
-
     if optimizer is None:
         optimizer = optim.Adam(shared_model.parameters(), lr=args.lr)
+
+
+    if torch.cuda.is_available():
+        model.cuda()
+        optimizer.cuda()
 
     model.train()
 
@@ -70,28 +72,30 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
     for t in count(start=counter.value):
         if rank == 0:
             if t % args.save_interval == 0 and t > 0:
-                torch.save(
-                    dict(
-                        env=args.env_name,
-                        id=args.model_id,
-                        step=counter.value,
-                        model_state_dict=shared_model.state_dict(),
-                        optimizer_state_dict=optimizer.state_dict(),
-                    ),
-                    os.path.join("checkpoints", f"{args.env_name}_{args.model_id}_a3c_params.tar")
-                )
+                save_checkpoint(shared_model, optimizer, args, counter.value)
+                # torch.save(
+                #     dict(
+                #         env=args.env_name,
+                #         id=args.model_id,
+                #         step=counter.value,
+                #         model_state_dict=shared_model.state_dict(),
+                #         optimizer_state_dict=optimizer.state_dict(),
+                #     ),
+                #     os.path.join("checkpoints", f"{args.env_name}_{args.model_id}_a3c_params.tar")
+                # )
 
         if t % args.save_interval == 0 and t > 0:  # and rank == 1:
-            torch.save(
-                dict(
-                    env=args.env_name,
-                    id=args.model_id,
-                    step=counter.value,
-                    model_state_dict=shared_model.state_dict(),
-                    optimizer_state_dict=optimizer.state_dict(),
-                ),
-                os.path.join("checkpoints", f"{args.env_name}_{args.model_id}_a3c_params.tar")
-            )
+            save_checkpoint(shared_model, optimizer, args, counter.value)
+            # torch.save(
+            #     dict(
+            #         env=args.env_name,
+            #         id=args.model_id,
+            #         step=counter.value,
+            #         model_state_dict=shared_model.state_dict(),
+            #         optimizer_state_dict=optimizer.state_dict(),
+            #     ),
+            #     os.path.join("checkpoints", f"{args.env_name}_{args.model_id}_a3c_params.tar")
+            # )
         # env.render()  # don't render training environments
         model.load_state_dict(shared_model.state_dict())
         if done:
@@ -109,9 +113,10 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
         for step in range(args.num_steps):
             episode_length += 1
 
-            # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
-            # value, logit, (hx, cx) = model((state_inp, (hx, cx)))
-            value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
+            state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
+            value, logit, (hx, cx) = model((state_inp, (hx, cx)))
+
+            # value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
             print(f"MODEL {rank} past forward pass")
 

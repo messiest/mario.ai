@@ -58,6 +58,19 @@ def get_epsilon(step, eps_end=0.05, eps_start=0.9, eps_decay=200):
     return eps_end + (eps_start - eps_end) * math.exp(-1 * step / eps_decay)
 
 
+def save_checkpoint(model, optimizer, args, n, dir='checkpoints'):
+    torch.save(
+        dict(
+            env=args.env_name,
+            id=args.model_id,
+            step=counter.value,
+            model_state_dict=model.state_dict(),
+            optimizer_state_dict=optimizer.state_dict(),
+        ),
+        os.path.join(dir, f"{args.env_name}_{args.model_id}_a3c_params.tar")
+    )
+
+
 
 if __name__ == "__main__":
     name = fetch_name()
