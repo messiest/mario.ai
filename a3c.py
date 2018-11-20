@@ -54,13 +54,12 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
 
-    if optimizer is None:
-        optimizer = optim.Adam(shared_model.parameters(), lr=args.lr)
-
-
     if torch.cuda.is_available():
         model.cuda()
         # optimizer.cuda()
+
+    if optimizer is None:
+        optimizer = optim.Adam(shared_model.parameters(), lr=args.lr)
 
     model.train()
 
@@ -99,11 +98,13 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
         # env.render()  # don't render training environments
         model.load_state_dict(shared_model.state_dict())
         if done:
-            cx = torch.zeros(1, 512)
-            hx = torch.zeros(1, 512)
+            cx = Variable(torch.zeros(1, 512)).type(FloatTensor)
+            hx = Variable(torch.zeros(1, 512)).type(FloatTensor)
         else:
-            cx = cx.detach()
-            hx = hx.detach()
+            # cx = Variable(cx.data).type(FloatTensor)
+            # hx = Variable(hx.data).type(FloatTensor)
+            cx = Variable(cx.detach()).type(FloatTensor)
+            hx = Variable(hx.detach()).type(FloatTensor)
 
         values = []
         log_probs = []
@@ -115,13 +116,13 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
 
             print("Pre Forward")
 
-            state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
+            # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
 
             print("INPUTS", type(state_inp), type(hx), type(cx))
 
-            value, logit, (hx, cx) = model((state_inp, (hx, cx)))
+            # value, logit, (hx, cx) = model((state_inp, (hx, cx)))
 
-            # value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
+            value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
             print(f"MODEL {rank} past forward pass")
 
