@@ -121,7 +121,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             reason = ''
             if select_sample:  # and random.random() > get_epsilon(step):
                 # action = prob.multinomial(num_samples=1).detach()
-                action = Variable(torch.cuda.randint(0, env.action_space.n, (1,1)))
+                action = torch.randint(0, env.action_space.n, (1,1)).detach()
                 reason = 'random'
             else:
                 action = choose_action(model, state, hx, cx)
