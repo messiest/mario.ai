@@ -118,12 +118,17 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             entropy = -(log_prob * prob).sum(1, keepdim=True)
             entropies.append(entropy)
 
+            reason = ''
             if select_sample and random.random() > get_epsilon(step):
                 # action = prob.multinomial(num_samples=1).detach()
                 action = torch.randint(0, env.action_space.n, (1,1))
+                reason = 'random'
             else:
                 action = choose_action(model, state, hx, cx)
                 model.train()  # may be redundant
+                reason = 'choice'
+
+            print("ACTION:", action, reason, type(action), action.to(torch.LongTensor))
 
             log_prob = log_prob.gather(1, action)
 
