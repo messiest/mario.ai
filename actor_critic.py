@@ -59,6 +59,8 @@ class ActorCritic(nn.Module):
         try:
             print("FORWARD PASS")
             x, (hx, cx) = inputs
+            if torch.cuda.is_available():
+                x, hx, cx = x.to('cuda'), hx.to('cuda'), cx.to('cuda') 
 
             print(type(x), type(hx), type(cx))
 
