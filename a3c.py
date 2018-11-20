@@ -49,7 +49,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
     ByteTensor = torch.cuda.ByteTensor if torch.cuda.is_available() else torch.ByteTensor
 
     env = create_mario_env(args.env_name)
-
     # env.seed(args.seed + rank)
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
@@ -68,20 +67,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
 
     episode_length = 0
     for t in count(start=counter.value):
-        if rank == 0:
-            if t % args.save_interval == 0 and t > 0:
-                save_checkpoint(shared_model, optimizer, args, counter.value)
-                # torch.save(
-                #     dict(
-                #         env=args.env_name,
-                #         id=args.model_id,
-                #         step=counter.value,
-                #         model_state_dict=shared_model.state_dict(),
-                #         optimizer_state_dict=optimizer.state_dict(),
-                #     ),
-                #     os.path.join("checkpoints", f"{args.env_name}_{args.model_id}_a3c_params.tar")
-                # )
-
         if t % args.save_interval == 0 and t > 0:  # and rank == 1:
             save_checkpoint(shared_model, optimizer, args, counter.value)
             # torch.save(
@@ -97,13 +82,17 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
         # env.render()  # don't render training environments
         model.load_state_dict(shared_model.state_dict())
         if done:
-            cx = Variable(torch.zeros(1, 512)).type(FloatTensor)
-            hx = Variable(torch.zeros(1, 512)).type(FloatTensor)
+            # cx = Variable(torch.zeros(1, 512)).type(FloatTensor)
+            # hx = Variable(torch.zeros(1, 512)).type(FloatTensor)
+            cx = torch.zeros(1, 512)
+            hx = torch.zeros(1, 512)
         else:
-            cx = Variable(cx.data).type(FloatTensor)
-            hx = Variable(hx.data).type(FloatTensor)
+            # cx = Variable(cx.data).type(FloatTensor)
+            # hx = Variable(hx.data).type(FloatTensor)
             # cx = Variable(cx.detach()).type(FloatTensor)
             # hx = Variable(hx.detach()).type(FloatTensor)
+            cx = cx.detach()
+            hx = hx.detach()
 
         values = []
         log_probs = []
@@ -115,11 +104,12 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
 
             print("Pre Forward")
 
-            state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
+            # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
 
             print("INPUTS", type(state_inp), type(hx), type(cx))
 
-            value, logit, (hx, cx) = model((state_inp, (hx, cx)))
+            # value, logit, (hx, cx) = model((state_inp, (hx, cx)))
+            value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
             print(f"MODEL {rank} past forward pass")
 
