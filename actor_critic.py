@@ -56,9 +56,7 @@ class ActorCritic(nn.Module):
         self.train()  # enter training mode
 
     def forward(self, inputs):
-
-
-
+        print("FORWARD PASS")
         x, (hx, cx) = inputs
 
         print(type(x), type(hx), type(cx))

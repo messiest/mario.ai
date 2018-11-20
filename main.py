@@ -96,14 +96,12 @@ def main(args):
         print("New agent:", args.model_id)
 
 
-
-
     torch.manual_seed(args.seed)
 
     print(FontColor.BLUE + f"Number of available cores: {mp.cpu_count(): 2d}" + FontColor.END)
     processes = []
 
-    counter = mp.Value('i', args.start_step)
+    counter = mp.Value('i', 0)  # args.start_step)
     lock = mp.Lock()
 
     p = mp.Process(target=test, args=(args.num_processes, args, shared_model, counter))

@@ -56,7 +56,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
 
     if torch.cuda.is_available():
         model.cuda()
-        # optimizer.cuda()
 
     if optimizer is None:
         optimizer = optim.Adam(shared_model.parameters(), lr=args.lr)
@@ -101,10 +100,10 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             cx = Variable(torch.zeros(1, 512)).type(FloatTensor)
             hx = Variable(torch.zeros(1, 512)).type(FloatTensor)
         else:
-            # cx = Variable(cx.data).type(FloatTensor)
-            # hx = Variable(hx.data).type(FloatTensor)
-            cx = Variable(cx.detach()).type(FloatTensor)
-            hx = Variable(hx.detach()).type(FloatTensor)
+            cx = Variable(cx.data).type(FloatTensor)
+            hx = Variable(hx.data).type(FloatTensor)
+            # cx = Variable(cx.detach()).type(FloatTensor)
+            # hx = Variable(hx.detach()).type(FloatTensor)
 
         values = []
         log_probs = []
