@@ -66,8 +66,17 @@ def main(args):
     if args.record:
         env = gym.wrappers.Monitor(env, "playback", force=True)
 
+    print("N", env.action_space.n)
+
     shared_model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
+    if torch.cuda.is_available():
+        shared_model.cuda()
+    shared_model.share_memory()
+
+
     optimizer = SharedAdam(shared_model.parameters(), lr=args.lr)
+    optimizer.share_memory()
+
 
     if args.load_model:
         checkpoint_file = f"{args.env_name}_{args.model_id}_a3c_params.tar"
@@ -86,11 +95,8 @@ def main(args):
         print("Environment:", args.env_name)
         print("New agent:", args.model_id)
 
-    if torch.cuda.is_available():
-        shared_model.cuda()
 
-    shared_model.share_memory()
-    optimizer.share_memory()
+
 
     torch.manual_seed(args.seed)
 
@@ -104,6 +110,7 @@ def main(args):
 
     p.start()
     processes.append(p)
+
     num_processes = args.num_processes
     no_sample = args.non_sample  # count of non-sampling processes
 
