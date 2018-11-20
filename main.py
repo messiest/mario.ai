@@ -60,7 +60,7 @@ def restore_checkpoint(env_id, dir=args.checkpoint_dir):
 def main(args):
     print("pytorch v", torch.__version__)
     os.environ['OMP_NUM_THREADS'] = '1'
-    os.environ['CUDA_VISIBLE_DEVICES'] = ""
+#    os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
     env = create_mario_env(args.env_name)
     if args.record:
