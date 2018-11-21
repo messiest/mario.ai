@@ -34,6 +34,7 @@ def choose_action(model, state, hx, cx):
     _, logits, _ = model.forward((state.unsqueeze(0), (hx, cx)))
     prob = F.softmax(logits, dim=-1).detach()
     action = prob.max(-1, keepdim=True)[1]
+    model.train()
 
     return action
 
@@ -102,16 +103,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
         for step in range(args.num_steps):
             episode_length += 1
 
-            print("Pre Forward")
-
-            # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
-
-            print("INPUTS", type(state), type(hx), type(cx))
-
-            # value, logit, (hx, cx) = model((state_inp, (hx, cx)))
             value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
-
-            print(f"MODEL {rank} past forward pass")
 
             prob = F.softmax(logit, dim=-1)
             log_prob = F.log_softmax(logit, dim=-1)
@@ -120,7 +112,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
 
             reason = ''
             if select_sample:  # and random.random() > get_epsilon(step):
-                # action = prob.multinomial(num_samples=1).detach()
                 action = torch.randint(0, env.action_space.n, (1,1)).detach()
                 reason = 'random'
             else:
@@ -131,11 +122,12 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             if torch.cuda.is_available():
                 action = action.to('cuda')
 
-            print("ACTION:", action, action.item(), reason,  type(action), action.to(torch.LongTensor()))
-
             log_prob = log_prob.gather(1, action)
 
-            action_out = ACTIONS[action]
+            action_out = ACTIONS[action.item()]
+
+            if args.verbose:
+                print(f"AGENT {rank} ACTION:", reason, action.item(), " + ".join(action_out))
 
             state, reward, done, info = env.step(action.item())
             done = done or episode_length >= args.max_episode_length
@@ -191,9 +183,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
         ensure_shared_grads(model, shared_model)
 
         optimizer.step()
-
-
-        print(f"MODEL {rank} HERE")
 
 
 def test(rank, args, shared_model, counter):

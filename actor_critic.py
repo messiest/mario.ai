@@ -56,29 +56,19 @@ class ActorCritic(nn.Module):
         self.train()  # enter training mode
 
     def forward(self, inputs):
-        try:
-            print("FORWARD PASS")
-            x, (hx, cx) = inputs
-            if torch.cuda.is_available():
-                x, hx, cx = x.to('cuda'), hx.to('cuda'), cx.to('cuda') 
+        x, (hx, cx) = inputs
 
-            print(type(x), type(hx), type(cx))
+        if torch.cuda.is_available():
+            x, hx, cx = x.to('cuda'), hx.to('cuda'), cx.to('cuda')
 
-            x = F.elu(self.conv1(x))
-            print("CONV1")
-            x = F.elu(self.conv2(x))
-            print("CONV2")
-            x = F.elu(self.conv3(x))
-            print("CONV3")
-            x = F.elu(self.conv4(x))
-            print("CONV4")
+        x = F.elu(self.conv1(x))
+        x = F.elu(self.conv2(x))
+        x = F.elu(self.conv3(x))
+        x = F.elu(self.conv4(x))
 
-            x = x.view(-1, 32 * 6 * 6)
-            hx, cx = self.lstm(x, (hx, cx))
+        x = x.view(-1, 32 * 6 * 6)
+        hx, cx = self.lstm(x, (hx, cx))
 
-            x = hx
+        x = hx
 
-            return self.critic_linear(x), self.actor_linear(x), (hx, cx)
-        except Exception as e:
-            print("ERROR")
-            print(e)
+        return self.critic_linear(x), self.actor_linear(x), (hx, cx)
