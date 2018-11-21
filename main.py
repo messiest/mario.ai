@@ -120,12 +120,12 @@ def main(args):
         if rank < sample_val:  # random action
             p = mp.Process(
                 target=train,
-                args=(rank, args, shared_model, counter, lock, optimizer, device),
+                args=(rank, args, shared_model.to(device), counter, lock, optimizer, device),
             )
         else:  # best action
             p = mp.Process(
                 target=train,
-                args=(rank, args, shared_model, counter, lock, optimizer, device, False),
+                args=(rank, args, shared_model.to(device), counter, lock, optimizer, device, False),
             )
         p.start()
         processes.append(p)
