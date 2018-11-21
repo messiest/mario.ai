@@ -158,7 +158,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             value, _, _ = model((state_inp, (hx, cx)))
             R = value.detach()
 
-        values.append(R.detach())
+        values.append(R)
         policy_loss = 0
         value_loss = 0
         R = Variable(R).type(FloatTensor)
