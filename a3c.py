@@ -171,7 +171,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             value_loss = value_loss + 0.5 * advantage.pow(2)
 
             # Generalized Advantage Estimation
-            delta_t = rewards[i] + args.gamma * values[i + 1].data - values[i].data
+            delta_t = rewards[i] + args.gamma * values[i + 1].item() - values[i].item()
             gae = gae * args.gamma * args.tau + delta_t
 
             policy_loss = policy_loss - \

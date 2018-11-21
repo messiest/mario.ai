@@ -54,7 +54,7 @@ def restore_checkpoint(file, dir=args.checkpoint_dir):
 
 
 def main(args):
-    print("pytorch v", torch.__version__)
+    print(f"pytorch v{torch.__version__}")
     print(f"CUDA: {torch.cuda.is_available()}")
     os.environ['OMP_NUM_THREADS'] = '1'
     # os.environ['CUDA_VISIBLE_DEVICES'] = ""
