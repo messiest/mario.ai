@@ -128,6 +128,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
                 model.train()  # may be redundant
                 reason = 'choice'
 
+            if torch.cuda.is_available():
+                action = action.to('cuda')
+
             print("ACTION:", action, action.item(), reason,  type(action), action.to(torch.LongTensor()))
 
             log_prob = log_prob.gather(1, action)
