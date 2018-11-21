@@ -37,7 +37,8 @@ parser.add_argument('--checkpoint-dir', type=str, default='checkpoints', help='d
 parser.add_argument('--start-step', type=int, default=0, help='training step on which to start')
 parser.add_argument('--model-id', type=str, default=fetch_name().strip(), help='name id for the model')
 parser.add_argument('--start-fresh', action='store_true', help='start training a new model')
-parser.add_argument('--load-model', default=None, help='model name to restore')
+parser.add_argument('--load-model', default=None, type=str, help='model name to restore')
+parser.add_argument('--verbose', action='store_true', help='print actions for debugging')
 
 
 args = parser.parse_args()
@@ -62,8 +63,6 @@ def main(args):
     if args.record:
         env = gym.wrappers.Monitor(env, "playback", force=True)
 
-    print("N", env.action_space.n)
-
     shared_model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
     if torch.cuda.is_available():
         shared_model.cuda()
@@ -73,7 +72,6 @@ def main(args):
     optimizer = SharedAdam(shared_model.parameters(), lr=args.lr)
     optimizer.share_memory()
 
-
     if args.load_model:
         checkpoint_file = f"{args.env_name}_{args.model_id}_a3c_params.tar"
         checkpoint = restore_checkpoint(checkpoint_file)
@@ -81,15 +79,17 @@ def main(args):
             "Checkpoint is for different environment"
         args.model_id = checkpoint['id']
         args.start_step = checkpoint['step']
+        print("Loading model from checkpoint...")
         print("Environment:", args.env_name)
-        print("Loading agent:", args.model_id)
-        print("Start step:", args.start_step)
+        print("Agent:", args.model_id)
+        print("Start Step:", args.start_step)
         shared_model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     else:
+        print("Preparing new model...")
         print("Environment:", args.env_name)
-        print("New agent:", args.model_id)
+        print("Agent:", args.model_id)
 
 
     torch.manual_seed(args.seed)

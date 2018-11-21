@@ -5,6 +5,7 @@ import math
 import requests
 
 import numpy as np
+import torch
 
 
 if not os.path.exists('assets/roster.csv'):
@@ -52,7 +53,7 @@ def build_roster(n=128, save_file='assets/roster.csv'):
             print(f"{i+1:3d} | {agent_id}")
             writer.writerow([agent_id])
 
-    return
+    return True
 
 def get_epsilon(step, eps_end=0.05, eps_start=0.9, eps_decay=200):
     return eps_end + (eps_start - eps_end) * math.exp(-1 * step / eps_decay)
@@ -63,7 +64,7 @@ def save_checkpoint(model, optimizer, args, n, dir='checkpoints'):
         dict(
             env=args.env_name,
             id=args.model_id,
-            step=counter.value,
+            step=n,
             model_state_dict=model.state_dict(),
             optimizer_state_dict=optimizer.state_dict(),
         ),
