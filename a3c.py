@@ -43,8 +43,6 @@ def choose_action(model, state, hx, cx):
 def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample=True):
     torch.manual_seed(args.seed + rank)
 
-    # print(f"RANK: {rank} | CUDA: {rank % 2}")
-
     text_color = FontColor.RED if select_sample else FontColor.GREEN
     if torch.cuda.is_available():
         print(text_color + f"Process No: {rank: 3d} | Sampling: {select_sample} | CUDA DEVICE: {torch.cuda.current_device() % torch.cuda.device_count()}", FontColor.END)
