@@ -59,7 +59,6 @@ def main(args):
     os.environ['OMP_NUM_THREADS'] = '1'
     # os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
-
     env = create_mario_env(args.env_name)
     if args.record:
         env = gym.wrappers.Monitor(env, "playback", force=True)
@@ -115,15 +114,18 @@ def main(args):
     sample_val = num_processes - no_sample
 
     for rank in range(0, num_processes):
+        device = 'cpu'
+        if torch.cuda.is_available():
+            device = f"cuda:{rank % torch.cuda.device_count()}"
         if rank < sample_val:  # random action
             p = mp.Process(
                 target=train,
-                args=(rank, args, shared_model, counter, lock, optimizer),
+                args=(rank, args, shared_model, counter, lock, optimizer, device),
             )
         else:  # best action
             p = mp.Process(
                 target=train,
-                args=(rank, args, shared_model, counter, lock, optimizer, False),
+                args=(rank, args, shared_model, counter, lock, optimizer, device, False),
             )
         p.start()
         processes.append(p)

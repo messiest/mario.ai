@@ -39,16 +39,17 @@ def choose_action(model, state, hx, cx):
 
     return action
 
-def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample=True):
+def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu', select_sample=True):
     torch.manual_seed(args.seed + rank)
 
-    device = rank % torch.cuda.device_count()
+    # device = rank % torch.cuda.device_count()
+
 
     text_color = FontColor.RED if select_sample else FontColor.GREEN
     if torch.cuda.is_available():
-        print(text_color + f"Process No: {rank: 3d} | Sampling: {select_sample} | CUDA DEVICE: {device}", FontColor.END)
+        print(text_color + f"Process No: {rank: 3d} | Sampling: {str(select_sample):5s} | CUDA DEVICE: {device}", FontColor.END)
     else:
-        print(text_color + f"Process No: {rank: 3d} | Sampling: {select_sample}", FontColor.END)
+        print(text_color + f"Process No: {rank: 3d} | Sampling: {str(select_sample):5s} | DEVICE: {device}", FontColor.END)
 
     FloatTensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
     DoubleTensor = torch.cuda.DoubleTensor if torch.cuda.is_available() else torch.DoubleTensor
@@ -75,16 +76,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
     for t in count(start=counter.value):
         if t % args.save_interval == 0 and t > 0:  # and rank == 1:
             save_checkpoint(shared_model, optimizer, args, counter.value)
-            # torch.save(
-            #     dict(
-            #         env=args.env_name,
-            #         id=args.model_id,
-            #         step=counter.value,
-            #         model_state_dict=shared_model.state_dict(),
-            #         optimizer_state_dict=optimizer.state_dict(),
-            #     ),
-            #     os.path.join("checkpoints", f"{args.env_name}_{args.model_id}_a3c_params.tar")
-            # )
         # env.render()  # don't render training environments
         model.load_state_dict(shared_model.state_dict())
         if done:
@@ -109,7 +100,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             episode_length += 1
 
             if torch.cuda.is_available():
-                state, hx, cx = state.to(f'cuda:{device}'), hx.to(f'cuda:{device}'), cx.to(f'cuda:{device}')
+                state, hx, cx = state.to(f'{device}'), hx.to(f'{device}'), cx.to(f'{device}')
 
             value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
@@ -119,7 +110,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             entropies.append(entropy)
 
             reason = ''
-            if select_sample:  # and random.random() > get_epsilon(step):
+            epsilon = get_epsilon(step)
+            if select_sample and random.random() < epsilon:
                 action = torch.randint(0, env.action_space.n, (1,1)).detach()
                 reason = 'random'
             else:
@@ -128,14 +120,14 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
                 reason = 'choice'
 
             if torch.cuda.is_available():
-                action = action.to(f'cuda:{device}')
+                action = action.to(f'{device}')
 
             log_prob = log_prob.gather(1, action)
 
             action_out = ACTIONS[action.item()]
 
             if args.verbose:
-                print(f"AGENT {rank} ACTION:", reason, action.item(), " + ".join(action_out))
+                print(f"AGENT {rank} | ACTION: {reason} - {' + '.join(action_out)}")
 
             state, reward, done, info = env.step(action.item())
             done = done or episode_length >= args.max_episode_length
@@ -227,24 +219,24 @@ def test(rank, args, shared_model, counter):
         # shared model sync
         if done:
             model.load_state_dict(shared_model.state_dict())
-            with torch.no_grad():
-                # cx = Variable(torch.zeros(1, 512)).type(FloatTensor)
-                # hx = Variable(torch.zeros(1, 512)).type(FloatTensor)
-                cx = torch.zeros(1, 512)
-                hx = torch.zeros(1, 512)
+            # with torch.no_grad():
+            # cx = Variable(torch.zeros(1, 512)).type(FloatTensor)
+            # hx = Variable(torch.zeros(1, 512)).type(FloatTensor)
+            cx = torch.zeros(1, 512)
+            hx = torch.zeros(1, 512)
 
         else:
-            with torch.no_grad():
-                # cx = Variable(cx.data).type(FloatTensor)
-                # hx = Variable(hx.data).type(FloatTensor)
-                # cx = Variable(cx.detach()).type(FloatTensor)
-                # hx = Variable(hx.detach()).type(FloatTensor)
-                cx = cx.detach()
-                hx = hx.detach()
+            # with torch.no_grad():
+            # cx = Variable(cx.data).type(FloatTensor)
+            # hx = Variable(hx.data).type(FloatTensor)
+            # cx = Variable(cx.detach()).type(FloatTensor)
+            # hx = Variable(hx.detach()).type(FloatTensor)
+            cx = cx.detach()
+            hx = hx.detach()
 
-        with torch.no_grad():
-            # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
-            state = state.unsqueeze(0)
+        # abswith torch.no_grad():
+        # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
+        state = state.unsqueeze(0)
 
         if torch.cuda.is_available():
             state, hx, cx = state.to('cuda'), hx.to('cuda'), cx.to('cuda')
@@ -333,8 +325,6 @@ def test(rank, args, shared_model, counter):
             episode_length = 0
             actions.clear()
             state = env.reset()
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
 
         state = torch.from_numpy(state)
 
