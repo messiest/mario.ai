@@ -30,6 +30,11 @@ def weights_init(model):
 class ActorCritic(nn.Module):
     def __init__(self, num_inputs, num_actions):
         super(ActorCritic, self).__init__()
+
+        self.device = 'cpu'
+        if torch.cuda.is_available():
+            self.device = torch.cuda.get_device_name()
+
         self.conv1 = nn.Conv2d(num_inputs, 32, 3, stride=2, padding=1)
         self.conv2 = nn.Conv2d(32, 32, 3, stride=2, padding=1)
         self.conv3 = nn.Conv2d(32, 32, 3, stride=2, padding=1)
@@ -57,6 +62,7 @@ class ActorCritic(nn.Module):
 
     def forward(self, inputs):
         x, (hx, cx) = inputs
+        x, hx, cx = x.to(self.device), hx.to(self.device), cx.to(self.device)
 
         x = F.elu(self.conv1(x))
         x = F.elu(self.conv2(x))

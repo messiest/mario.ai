@@ -42,20 +42,14 @@ def choose_action(model, state, hx, cx):
 def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu', select_sample=True):
     torch.manual_seed(args.seed + rank)
 
-    # device = rank % torch.cuda.device_count()
-
-
     text_color = FontColor.RED if select_sample else FontColor.GREEN
-    if torch.cuda.is_available():
-        print(text_color + f"Process: {rank: 3d} | Sampling: {str(select_sample):5s} | CUDA DEVICE: {device}", FontColor.END)
-    else:
-        print(text_color + f"Process: {rank: 3d} | Sampling: {str(select_sample):5s} | DEVICE: {device}", FontColor.END)
+    print(text_color + f"Process: {rank: 3d} | Sampling: {str(select_sample):5s} | DEVICE: {device}", FontColor.END)
 
     FloatTensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
     DoubleTensor = torch.cuda.DoubleTensor if torch.cuda.is_available() else torch.DoubleTensor
     ByteTensor = torch.cuda.ByteTensor if torch.cuda.is_available() else torch.ByteTensor
 
-    env = create_mario_env(args.env_name)
+    env = create_mario_env(args.env_name, args.move_set)
     # env.seed(args.seed + rank)
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
@@ -79,15 +73,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         # env.render()  # don't render training environments
         model.load_state_dict(shared_model.state_dict())
         if done:
-            # cx = Variable(torch.zeros(1, 512)).type(FloatTensor)
-            # hx = Variable(torch.zeros(1, 512)).type(FloatTensor)
             cx = torch.zeros(1, 512)
             hx = torch.zeros(1, 512)
         else:
-            # cx = Variable(cx.data).type(FloatTensor)
-            # hx = Variable(hx.data).type(FloatTensor)
-            # cx = Variable(cx.detach()).type(FloatTensor)
-            # hx = Variable(hx.detach()).type(FloatTensor)
             cx = cx.detach()
             hx = hx.detach()
 
@@ -99,8 +87,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         for step in range(args.num_steps):
             episode_length += 1
 
-            if torch.cuda.is_available():
-                state, hx, cx = state.to(f'{device}'), hx.to(f'{device}'), cx.to(f'{device}')
+            # if torch.cuda.is_available():
+            #     state, hx, cx = state.to(device), hx.to(device), cx.to(device)
 
             value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
@@ -125,9 +113,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             log_prob = log_prob.gather(1, action)
 
             action_out = ACTIONS[action.item()]
-
-            # if args.verbose:
-            #     print(f"AGENT {rank} | ACTION: {reason} - {' + '.join(action_out)}")
 
             state, reward, done, info = env.step(action.item())
             done = done or episode_length >= args.max_episode_length
@@ -219,22 +204,14 @@ def test(rank, args, shared_model, counter):
         # shared model sync
         if done:
             model.load_state_dict(shared_model.state_dict())
-            # with torch.no_grad():
-            # cx = Variable(torch.zeros(1, 512)).type(FloatTensor)
-            # hx = Variable(torch.zeros(1, 512)).type(FloatTensor)
             cx = torch.zeros(1, 512)
             hx = torch.zeros(1, 512)
 
         else:
-            # with torch.no_grad():
-            # cx = Variable(cx.data).type(FloatTensor)
-            # hx = Variable(hx.data).type(FloatTensor)
-            # cx = Variable(cx.detach()).type(FloatTensor)
-            # hx = Variable(hx.detach()).type(FloatTensor)
             cx = cx.detach()
             hx = hx.detach()
 
-        # abswith torch.no_grad():
+        # with torch.no_grad():
         # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
         state = state.unsqueeze(0)
 
@@ -249,8 +226,7 @@ def test(rank, args, shared_model, counter):
 
         action_out = ACTIONS[action]
 
-        if args.verbose:
-            print(f"ACTION: {' + '.join(action_out):13s}", end='\r')
+        print(f"{args.env_name} || {' + '.join(action_out):^13s} || ", end='\r')
 
         state, reward, done, info = env.step(action.item())
 
@@ -291,13 +267,13 @@ def test(rank, args, shared_model, counter):
             t = time.time() - start_time
 
             print(
-                f"ACTION: {' + '.join(action_out):13s} || " + \
-                f"{args.env_name} | " + \
+                f"{args.env_name} || " + \
+                f"{' + '.join(action_out):^13s} || " + \
                 f"ID: {args.model_id}, " + \
                 f"Time: {time.strftime('%H:%M:%Ss', time.gmtime(t))}, " + \
-                f"FPS: {counter.value/t: 4.2f}, " + \
-                f"Reward: {reward_sum: 6.2f}, " + \
-                f"Episode Length: {episode_length: 4d}, " + \
+                f"FPS: {counter.value/t: 6.2f}, " + \
+                f"Reward: {reward_sum: 10.2f}, " + \
+                f"Episode Length: {episode_length: 7d}, " + \
                 f"Progress: {(info['x_pos'] / 3225) * 100: 3.2f}%",
                 end='\r',
                 flush=True,
