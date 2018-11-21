@@ -44,7 +44,10 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
     torch.manual_seed(args.seed + rank)
 
     text_color = FontColor.RED if select_sample else FontColor.GREEN
-    print(text_color + f"Process No: {rank: 3d} | Sampling: {select_sample}", FontColor.END)
+    if torch.cuda.is_available():
+        print(text_color + f"Process No: {rank: 3d} | Sampling: {select_sample} | CUDA: {torch.cuda.current_device()}", FontColor.END)
+    else:
+        print(text_color + f"Process No: {rank: 3d} | Sampling: {select_sample}", FontColor.END)    
 
     FloatTensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
     DoubleTensor = torch.cuda.DoubleTensor if torch.cuda.is_available() else torch.DoubleTensor
