@@ -224,18 +224,23 @@ def test(rank, args, shared_model, counter):
         if done:
             model.load_state_dict(shared_model.state_dict())
             with torch.no_grad():
-                cx = Variable(torch.zeros(1, 512)).type(FloatTensor)
-                hx = Variable(torch.zeros(1, 512)).type(FloatTensor)
+                # cx = Variable(torch.zeros(1, 512)).type(FloatTensor)
+                # hx = Variable(torch.zeros(1, 512)).type(FloatTensor)
+                cx = torch.zeros(1, 512)
+                hx = torch.zeros(1, 512)
 
         else:
             with torch.no_grad():
                 # cx = Variable(cx.data).type(FloatTensor)
                 # hx = Variable(hx.data).type(FloatTensor)
-                cx = Variable(cx.detach()).type(FloatTensor)
-                hx = Variable(hx.detach()).type(FloatTensor)
+                # cx = Variable(cx.detach()).type(FloatTensor)
+                # hx = Variable(hx.detach()).type(FloatTensor)
+                cx = cx.detach()
+                hx = hx.detach()
 
         with torch.no_grad():
-            state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
+            # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
+            state_inp = state.unsqueeze(0)
 
         value, logit, (hx, cx) = model((state_inp, (hx, cx)))
         prob = F.softmax(logit, dim=-1)
