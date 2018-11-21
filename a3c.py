@@ -158,7 +158,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             value, _, _ = model((state_inp, (hx, cx)))
             R = value.detach()
 
-        values.append(Variable(R).type(FloatTensor))
+        values.append(R.detach())
         policy_loss = 0
         value_loss = 0
         R = Variable(R).type(FloatTensor)
@@ -278,7 +278,7 @@ def test(rank, args, shared_model, counter):
 
         reward_sum += reward
 
-        actions.append(action)
+        actions.append(action.detach())
 
         if actions.count(actions[0]) == actions.maxlen:
             done = True
