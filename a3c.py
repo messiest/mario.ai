@@ -329,6 +329,8 @@ def test(rank, args, shared_model, counter):
             episode_length = 0
             actions.clear()
             state = env.reset()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
 
         state = torch.from_numpy(state)
 
