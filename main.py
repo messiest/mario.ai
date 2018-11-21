@@ -6,6 +6,7 @@ import multiprocessing
 import numpy as np
 import tqdm
 import gym
+from gym_super_mario_bros.actions import COMPLEX_MOVEMENT  # TODO: how to set this via args
 import torch
 import torch.multiprocessing as _mp
 
@@ -39,6 +40,7 @@ parser.add_argument('--model-id', type=str, default=fetch_name().strip(), help='
 parser.add_argument('--start-fresh', action='store_true', help='start training a new model')
 parser.add_argument('--load-model', default=None, type=str, help='model name to restore')
 parser.add_argument('--verbose', action='store_true', help='print actions for debugging')
+parser.add_argument('--move-set', default=COMPLEX_MOVEMENT, help='the set of possible actions')
 
 
 args = parser.parse_args()
@@ -59,7 +61,7 @@ def main(args):
     os.environ['OMP_NUM_THREADS'] = '1'
     # os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
-    env = create_mario_env(args.env_name)
+    env = create_mario_env(args.env_name, args.move_set)
     if args.record:
         env = gym.wrappers.Monitor(env, "playback", force=True)
 
@@ -92,7 +94,7 @@ def main(args):
         print("Agent:", args.model_id)
 
 
-    torch.manual_seed(args.seed)
+    # torch.manual_seed(args.seed)
 
     print(FontColor.BLUE + f"Number of available cores: {mp.cpu_count(): 2d}" + FontColor.END)
     processes = []
@@ -120,12 +122,12 @@ def main(args):
         if rank < sample_val:  # random action
             p = mp.Process(
                 target=train,
-                args=(rank, args, shared_model.to(device), counter, lock, optimizer, device),
+                args=(rank, args, shared_model, counter, lock, optimizer, device),
             )
         else:  # best action
             p = mp.Process(
                 target=train,
-                args=(rank, args, shared_model.to(device), counter, lock, optimizer, device, False),
+                args=(rank, args, shared_model, counter, lock, optimizer, device, False),
             )
         p.start()
         processes.append(p)

@@ -144,8 +144,8 @@ def wrap_mario(env):
     return env
 
 
-def create_mario_env(env_id):
+def create_mario_env(env_id, move_set=COMPLEX_MOVEMENT):
     env = gym_super_mario_bros.make(env_id)
-    env = BinarySpaceToDiscreteSpaceEnv(env, COMPLEX_MOVEMENT)
+    env = BinarySpaceToDiscreteSpaceEnv(env, move_set)
     env = wrap_mario(env)
     return env

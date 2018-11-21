@@ -47,9 +47,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
     text_color = FontColor.RED if select_sample else FontColor.GREEN
     if torch.cuda.is_available():
-        print(text_color + f"Process No: {rank: 3d} | Sampling: {str(select_sample):5s} | CUDA DEVICE: {device}", FontColor.END)
+        print(text_color + f"Process: {rank: 3d} | Sampling: {str(select_sample):5s} | CUDA DEVICE: {device}", FontColor.END)
     else:
-        print(text_color + f"Process No: {rank: 3d} | Sampling: {str(select_sample):5s} | DEVICE: {device}", FontColor.END)
+        print(text_color + f"Process: {rank: 3d} | Sampling: {str(select_sample):5s} | DEVICE: {device}", FontColor.END)
 
     FloatTensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
     DoubleTensor = torch.cuda.DoubleTensor if torch.cuda.is_available() else torch.DoubleTensor
@@ -126,8 +126,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
             action_out = ACTIONS[action.item()]
 
-            if args.verbose:
-                print(f"AGENT {rank} | ACTION: {reason} - {' + '.join(action_out)}")
+            # if args.verbose:
+            #     print(f"AGENT {rank} | ACTION: {reason} - {' + '.join(action_out)}")
 
             state, reward, done, info = env.step(action.item())
             done = done or episode_length >= args.max_episode_length
@@ -249,6 +249,9 @@ def test(rank, args, shared_model, counter):
 
         action_out = ACTIONS[action]
 
+        if args.verbose:
+            print(f"ACTION: {' + '.join(action_out):13s}", end='\r')
+
         state, reward, done, info = env.step(action.item())
 
         save_file = os.getcwd() + f'/save/{args.env_name}_performance.csv'
@@ -288,6 +291,7 @@ def test(rank, args, shared_model, counter):
             t = time.time() - start_time
 
             print(
+                f"ACTION: {' + '.join(action_out):13s} || " + \
                 f"{args.env_name} | " + \
                 f"ID: {args.model_id}, " + \
                 f"Time: {time.strftime('%H:%M:%Ss', time.gmtime(t))}, " + \
