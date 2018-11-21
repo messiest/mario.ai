@@ -39,13 +39,14 @@ def choose_action(model, state, hx, cx):
 
     return action
 
-
 def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample=True):
     torch.manual_seed(args.seed + rank)
 
+    device = rank % torch.cuda.device_count()
+
     text_color = FontColor.RED if select_sample else FontColor.GREEN
     if torch.cuda.is_available():
-        print(text_color + f"Process No: {rank: 3d} | Sampling: {select_sample} | CUDA DEVICE: {rank % torch.cuda.device_count()}", FontColor.END)
+        print(text_color + f"Process No: {rank: 3d} | Sampling: {select_sample} | CUDA DEVICE: {device}", FontColor.END)
     else:
         print(text_color + f"Process No: {rank: 3d} | Sampling: {select_sample}", FontColor.END)
 
@@ -108,7 +109,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
             episode_length += 1
 
             if torch.cuda.is_available():
-                state, hx, cx = state.to('cuda'), hx.to('cuda'), cx.to('cuda')
+                state, hx, cx = state.to(f'cuda:{device}'), hx.to(f'cuda:{device}'), cx.to(f'cuda:{device}')
 
             value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
@@ -127,7 +128,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
                 reason = 'choice'
 
             if torch.cuda.is_available():
-                action = action.to('cuda')
+                action = action.to(f'cuda:{device}')
 
             log_prob = log_prob.gather(1, action)
 
