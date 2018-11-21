@@ -58,9 +58,6 @@ class ActorCritic(nn.Module):
     def forward(self, inputs):
         x, (hx, cx) = inputs
 
-        # if torch.cuda.is_available():
-        #     x, hx, cx = x.to('cuda'), hx.to('cuda'), cx.to('cuda')
-
         x = F.elu(self.conv1(x))
         x = F.elu(self.conv2(x))
         x = F.elu(self.conv3(x))
