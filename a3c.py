@@ -1,4 +1,5 @@
 import os
+import gc
 import csv
 import time
 import random
@@ -186,6 +187,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
         ensure_shared_grads(model, shared_model)
 
         optimizer.step()
+
+        gc.collect()
 
 
 def test(rank, args, shared_model, counter):
