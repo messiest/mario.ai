@@ -57,11 +57,8 @@ def main(args):
     print(f"pytorch v{torch.__version__}")
     print(f"CUDA: {torch.cuda.is_available()}")
     os.environ['OMP_NUM_THREADS'] = '1'
-<<<<<<< HEAD
-#    os.environ['CUDA_VISIBLE_DEVICES'] = ""
-=======
     # os.environ['CUDA_VISIBLE_DEVICES'] = ""
->>>>>>> 1dba8040988b66354929dc0b018d23d2f4d24db8
+
 
     env = create_mario_env(args.env_name)
     if args.record:
