@@ -83,17 +83,17 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, select_sample
         # env.render()  # don't render training environments
         model.load_state_dict(shared_model.state_dict())
         if done:
-            # cx = Variable(torch.zeros(1, 512)).type(FloatTensor)
-            # hx = Variable(torch.zeros(1, 512)).type(FloatTensor)
-            cx = torch.zeros(1, 512)
-            hx = torch.zeros(1, 512)
+            cx = Variable(torch.zeros(1, 512)).type(FloatTensor)
+            hx = Variable(torch.zeros(1, 512)).type(FloatTensor)
+            # cx = torch.zeros(1, 512)
+            # hx = torch.zeros(1, 512)
         else:
             # cx = Variable(cx.data).type(FloatTensor)
             # hx = Variable(hx.data).type(FloatTensor)
-            # cx = Variable(cx.detach()).type(FloatTensor)
-            # hx = Variable(hx.detach()).type(FloatTensor)
-            cx = cx.detach()
-            hx = hx.detach()
+            cx = Variable(cx.detach()).type(FloatTensor)
+            hx = Variable(hx.detach()).type(FloatTensor)
+            # cx = cx.detach()
+            # hx = hx.detach()
 
         values = []
         log_probs = []
