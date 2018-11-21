@@ -240,9 +240,14 @@ def test(rank, args, shared_model, counter):
 
         with torch.no_grad():
             # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
-            state_inp = state.unsqueeze(0)
+            state = state.unsqueeze(0)
 
-        value, logit, (hx, cx) = model((state_inp, (hx, cx)))
+        if torch.cuda.is_available():
+            state, hx, cx = state.to('cuda'), hx.to('cuda'), cx.to('cuda')
+
+        with torch.no_grad():
+            value, logit, (hx, cx) = model((state, (hx, cx)))
+
         prob = F.softmax(logit, dim=-1)
         action = prob.max(-1, keepdim=True)[1]
 
