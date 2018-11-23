@@ -21,8 +21,8 @@ def ensure_shared_grads(model, shared_model):
     for param, shared_param in zip(model.parameters(), shared_model.parameters()):
         if shared_param.grad is not None:
             return
-
         shared_param._grad = param.grad
+
 
 def choose_action(model, state, hx, cx):
     model.eval()  # set to eval mode
@@ -35,13 +35,11 @@ def choose_action(model, state, hx, cx):
 
 
 def test(rank, args, shared_model, counter):
-
     torch.manual_seed(args.seed + rank)
 
     env = create_mario_env(args.env_name)
     if args.record:
         env = gym.wrappers.Monitor(env, 'playback/', force=True)
-
     # env.seed(args.seed + rank)
 
     model = ActorCritic(env.observation_space.shape[0], len(ACTIONS[args.move_set]))

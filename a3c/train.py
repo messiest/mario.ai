@@ -1,16 +1,16 @@
 import os
 import gc
-import csv
-import time
+# import csv
+# import time
 import random
-from fnmatch import filter
+# from fnmatch import filter
 from collections import deque
 from itertools import count
 
 import numpy as np
-import cv2
+# import cv2
 import gym
-from gym import wrappers
+# from gym import wrappers
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -20,7 +20,7 @@ from models import ActorCritic
 from mario_actions import ACTIONS
 from mario_wrapper import create_mario_env
 from optimizers import SharedAdam
-from utils import fetch_name, get_epsilon, FontColor, save_checkpoint
+from utils import get_epsilon, FontColor, save_checkpoint
 
 
 def ensure_shared_grads(model, shared_model):
