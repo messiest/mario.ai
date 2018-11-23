@@ -1,14 +1,9 @@
 import os
 import time
-import random
 import argparse
 import warnings
-import multiprocessing
 
-import numpy as np
-import tqdm
 import gym
-from gym_super_mario_bros.actions import COMPLEX_MOVEMENT, SIMPLE_MOVEMENT  # TODO: how to set this via args
 import torch
 import torch.multiprocessing as _mp
 
@@ -28,7 +23,7 @@ parser.add_argument('--entropy-coef', type=float, default=0.01, help='entropy te
 parser.add_argument('--value-loss-coef', type=float, default=0.5, help='value loss coefficient (default: 0.5)')
 parser.add_argument('--max-grad-norm', type=float, default=50, help='value loss coefficient (default: 50)')
 parser.add_argument('--seed', type=int, default=4, help='random seed (default: 4)')
-parser.add_argument('--num-processes', type=int, default=multiprocessing.cpu_count(), help='how many training processes to use (default: 4)')
+parser.add_argument('--num-processes', type=int, default=_mp.cpu_count(), help='how many training processes to use (default: 4)')
 parser.add_argument('--num-steps', type=int, default=50, help='number of forward steps in A3C (default: 50)')
 parser.add_argument('--max-episode-length', type=int, default=1000000, help='maximum length of an episode (default: 1000000)')
 parser.add_argument('--env-name', default='SuperMarioBros-v0', help='environment to train on (default: SuperMarioBros-v0)')
@@ -36,10 +31,10 @@ parser.add_argument('--no-shared', default=False, help='use an optimizer without
 parser.add_argument('--use-cuda', default=True, help='run on gpu.')
 parser.add_argument('--record', action='store_true', help='record playback of tests')
 parser.add_argument('--save-interval', type=int, default=100, help='model save interval (default: 100)')
-parser.add_argument('--non-sample', type=int, default=multiprocessing.cpu_count() - 2, help='number of non sampling processes (default: 2)')
+parser.add_argument('--non-sample', type=int, default=_mp.cpu_count() - 2, help='number of non sampling processes (default: 2)')
 parser.add_argument('--checkpoint-dir', type=str, default='checkpoints', help='directory to save checkpoints')
 parser.add_argument('--start-step', type=int, default=0, help='training step on which to start')
-parser.add_argument('--model-id', type=str, default=fetch_name().strip(), help='name id for the model')
+parser.add_argument('--model-id', type=str, default=fetch_name(), help='name id for the model')
 parser.add_argument('--start-fresh', action='store_true', help='start training a new model')
 parser.add_argument('--load-model', default=None, type=str, help='model name to restore')
 parser.add_argument('--verbose', action='store_true', help='print actions for debugging')
@@ -86,15 +81,17 @@ def main(args):
         print("Loading model from checkpoint...")
         print(f"Environment: {args.env_name}")
         print(f"      Agent: {args.model_id}")
-        # print("Start Step:", args.start_step)
+        print(f"      Moves: {args.move_set}")
+        print(f"      Start: Step {args.start_step}")
         shared_model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     else:
         print(f"Environment: {args.env_name}")
         print(f"      Agent: {args.model_id}")
+        print(f"      Moves: {args.move_set}")
 
-    # torch.manual_seed(args.seed)
+    torch.manual_seed(args.seed)
 
     print(
         FontColor.BLUE + \
