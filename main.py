@@ -56,13 +56,13 @@ def debug():  # TODO: Move this to utils
 
 
 def restore_checkpoint(file, dir=args.checkpoint_dir):
-    print("Restoring Checkpoint:", file)
     checkpoint = torch.load(os.path.join(dir, file))
     return checkpoint
 
 
 def main(args):
-    debug()
+    if args.debug:
+        debug()
     os.environ['OMP_NUM_THREADS'] = '1'
     os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
@@ -108,7 +108,7 @@ def main(args):
     )
     processes = []
 
-    counter = mp.Value('i', 0)  # args.start_step)
+    counter = mp.Value('i', args.start_step)
     lock = mp.Lock()
 
     p = mp.Process(target=test, args=(args.num_processes, args, shared_model, counter))
@@ -140,8 +140,7 @@ def main(args):
             )
         p.start()
         processes.append(p)
-        time.sleep(1.)
-
+ 
     for p in processes:
         p.join()
 

@@ -3,24 +3,18 @@ import gc
 import csv
 import time
 import random
-from fnmatch import filter
 from collections import deque
 from itertools import count
 
-import numpy as np
-import cv2
 import gym
-from gym import wrappers
 import torch
-import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
 
 from models import ActorCritic
 from mario_actions import ACTIONS
 from mario_wrapper import create_mario_env
 from optimizers import SharedAdam
-from utils import fetch_name, get_epsilon, FontColor, save_checkpoint
+from utils import get_epsilon, FontColor, save_checkpoint
 
 
 def ensure_shared_grads(model, shared_model):
@@ -82,7 +76,10 @@ def test(rank, args, shared_model, counter):
 
         action_out = ACTIONS[args.move_set][action[0, 0]]
 
-        print(f"{args.env_name} || {' + '.join(action_out):^13s} || ", end='\r')
+        print(
+            f"|| {args.env_name} |[ {' + '.join(action_out):^13s} ]| ",
+            end='\r',
+        )
 
         state, reward, done, info = env.step(action[0, 0])  # action.item()
 
@@ -124,10 +121,10 @@ def test(rank, args, shared_model, counter):
             t = time.time() - start_time
 
             print(
-                f"{args.env_name} || " + \
-                f"{' + '.join(action_out):^13s} || " + \
+                f"|| {args.env_name} |[ " + \
+                f"{' + '.join(action_out):^13s} ]| " + \
                 f"ID: {args.model_id}, " + \
-                f"Time: {time.strftime('%H:%M:%S', time.gmtime(t)):^10s}, " + \
+                f"Time: {time.strftime('%H:%M:%S', time.gmtime(t)):^9s}, " + \
                 f"FPS: {counter.value/t: 6.2f}, " + \
                 f"Reward: {reward_sum: 10.2f}, " + \
                 f"Episode Length: {episode_length: 7d}, " + \
@@ -142,15 +139,15 @@ def test(rank, args, shared_model, counter):
                 counter.value,  # Total Steps
                 reward_sum,  # Cummulative Reward
                 episode_length,  # Episode Step Length
-                info['coins'],
-                info['flag_get'],
-                info['life'],
-                info['score'],
-                info['stage'],
-                info['status'],
-                info['time'],
-                info['world'],
-                info['x_pos'],
+                info['coins'],  # Coins Collected
+                info['flag_get'],  # Got Flag
+                info['life'],  # Remaining Lives
+                info['score'],  # Score
+                info['stage'],  # Stage Number
+                info['status'],  # small, super
+                info['time'],  # Remaining Time
+                info['world'],  # World Number
+                info['x_pos'],  # X Distance
             ]
 
             with open(save_file, 'a', newline='') as file:
