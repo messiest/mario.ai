@@ -9,6 +9,7 @@ def normalized_columns_initializer(weights, std=1.0):
     out *= std / torch.sqrt(out.pow(2).sum(1, keepdim=True))
     return out
 
+
 def weights_init(model):
     classname = model.__class__.__name__
     if classname.find('Conv') != -1:
