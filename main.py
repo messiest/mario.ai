@@ -12,7 +12,7 @@ from gym_super_mario_bros.actions import COMPLEX_MOVEMENT, SIMPLE_MOVEMENT  # TO
 import torch
 import torch.multiprocessing as _mp
 
-from actor_critic import ActorCritic
+from models import ActorCritic
 from shared_adam import SharedAdam
 from mario_wrapper import create_mario_env
 from a3c import train, test

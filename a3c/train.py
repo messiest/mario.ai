@@ -16,7 +16,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-from actor_critic import ActorCritic
+# from actor_critic import ActorCritic
+from models import ActorCritic
 from mario_actions import ACTIONS
 from mario_wrapper import create_mario_env
 from shared_adam import SharedAdam
