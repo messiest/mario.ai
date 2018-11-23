@@ -45,10 +45,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
     text_color = FontColor.RED if select_sample else FontColor.GREEN
     print(text_color + f"Process: {rank: 3d} | Sampling: {str(select_sample):5s} | DEVICE: {device}", FontColor.END)
 
-    # FloatTensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-    # DoubleTensor = torch.cuda.DoubleTensor if torch.cuda.is_available() else torch.DoubleTensor
-    # ByteTensor = torch.cuda.ByteTensor if torch.cuda.is_available() else torch.ByteTensor
-
     env = create_mario_env(args.env_name, args.move_set)
     # env.seed(args.seed + rank)
 
@@ -86,9 +82,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
         for step in range(args.num_steps):
             episode_length += 1
-
-            # if torch.cuda.is_available():
-            #     state, hx, cx = state.to(device), hx.to(device), cx.to(device)
 
             value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
@@ -141,8 +134,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         values.append(R)
         policy_loss = 0
         value_loss = 0
-        # R = Variable(R).type(FloatTensor)
-        # R = R.detach()
 
         gae = torch.zeros(1, 1)  #.type(FloatTensor)
 
@@ -152,19 +143,12 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             value_loss = value_loss + 0.5 * advantage.pow(2)
 
             # Generalized Advantage Estimation
-            # delta_t = rewards[i] + args.gamma * values[i + 1].item() - values[i].item()
             delta_t = rewards[i] + args.gamma * values[i + 1] - values[i]
             gae = gae * args.gamma * args.tau + delta_t
-
-            # policy_loss = policy_loss - \
-            #     log_probs[i] * Variable(gae).type(FloatTensor) - \
-            #     args.entropy_coef * entropies[i]
 
             policy_loss = policy_loss - \
                           log_probs[i] * gae.detach() - \
                           args.entropy_coef * entropies[i]
-
-        # total_loss = policy_loss + args.value_loss_coef * value_loss
 
         optimizer.zero_grad()
         (policy_loss + args.value_loss_coef * value_loss).backward()
@@ -174,16 +158,12 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
         optimizer.step()
 
-        # gc.collect()
+        gc.collect()
 
 
 def test(rank, args, shared_model, counter):
 
     torch.manual_seed(args.seed + rank)
-
-    # FloatTensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-    # DoubleTensor = torch.cuda.DoubleTensor if torch.cuda.is_available() else torch.DoubleTensor
-    # ByteTensor = torch.cuda.ByteTensor if torch.cuda.is_available() else torch.ByteTensor
 
     env = create_mario_env(args.env_name)
     if args.record:
@@ -214,13 +194,6 @@ def test(rank, args, shared_model, counter):
         else:
             cx = cx.detach()
             hx = hx.detach()
-
-        # with torch.no_grad():
-        # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
-        # state = state.unsqueeze(0)
-
-        # if torch.cuda.is_available():
-        #     state, hx, cx = state.to('cuda'), hx.to('cuda'), cx.to('cuda')
 
         with torch.no_grad():
             value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
