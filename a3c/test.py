@@ -16,22 +16,7 @@ from mario_wrapper import create_mario_env
 from optimizers import SharedAdam
 from utils import get_epsilon, FontColor, save_checkpoint
 
-
-def ensure_shared_grads(model, shared_model):
-    for param, shared_param in zip(model.parameters(), shared_model.parameters()):
-        if shared_param.grad is not None:
-            return
-        shared_param._grad = param.grad
-
-
-def choose_action(model, state, hx, cx):
-    model.eval()  # set to eval mode
-    _, logits, _ = model.forward((state.unsqueeze(0), (hx, cx)))
-    prob = F.softmax(logits, dim=-1).detach()
-    action = prob.max(-1, keepdim=True)[1]
-    model.train()
-
-    return action
+from a3c.utils import ensure_shared_grads, choose_action
 
 
 def test(rank, args, shared_model, counter):
