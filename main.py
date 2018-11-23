@@ -6,6 +6,7 @@ import warnings
 import gym
 import torch
 import torch.multiprocessing as _mp
+import torchvision
 
 from models import ActorCritic
 from optimizers import SharedAdam
@@ -15,6 +16,7 @@ from utils import FontColor, fetch_name
 from mario_actions import ACTIONS
 
 
+# Command Line Interface
 parser = argparse.ArgumentParser(description='A3C')
 parser.add_argument('--lr', type=float, default=0.0001, help='learning rate (default: 0.0001)')
 parser.add_argument('--gamma', type=float, default=0.9, help='discount factor for rewards (default: 0.9)')
@@ -38,13 +40,19 @@ parser.add_argument('--model-id', type=str, default=fetch_name(), help='name id 
 parser.add_argument('--start-fresh', action='store_true', help='start training a new model')
 parser.add_argument('--load-model', default=None, type=str, help='model name to restore')
 parser.add_argument('--verbose', action='store_true', help='print actions for debugging')
+parser.add_argument('--debug', action='store_true', help='print versions of essential packages')
 parser.add_argument('--move-set', default='complex', type=str, help='the set of possible actions')
-
-
 args = parser.parse_args()
 
 
+# multiprocessing
 mp = _mp.get_context('spawn')
+
+
+def debug():  # TODO: Move this to utils
+    print(f"pytorch {torch.__version__}")
+    print(f"torchvision {torchvision.__version__}")
+    print(f"gym {gym.__version__}")
 
 
 def restore_checkpoint(file, dir=args.checkpoint_dir):
@@ -54,7 +62,7 @@ def restore_checkpoint(file, dir=args.checkpoint_dir):
 
 
 def main(args):
-    # print(f"pytorch v{torch.__version__}")
+    debug()
     os.environ['OMP_NUM_THREADS'] = '1'
     os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
@@ -66,7 +74,6 @@ def main(args):
     if torch.cuda.is_available():
         shared_model.cuda()
     shared_model.share_memory()
-
 
     optimizer = SharedAdam(shared_model.parameters(), lr=args.lr)
     optimizer.share_memory()
