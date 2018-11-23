@@ -19,7 +19,7 @@ import torch.nn.functional as F
 from models import ActorCritic
 from mario_actions import ACTIONS
 from mario_wrapper import create_mario_env
-from shared_adam import SharedAdam
+from optimizers import SharedAdam
 from utils import fetch_name, get_epsilon, FontColor, save_checkpoint
 
 
@@ -50,7 +50,7 @@ def test(rank, args, shared_model, counter):
 
     # env.seed(args.seed + rank)
 
-    model = ActorCritic(env.observation_space.shape[0], len(ACTIONS))
+    model = ActorCritic(env.observation_space.shape[0], len(ACTIONS[args.move_set]))
     if torch.cuda.is_available():
         model.cuda()
     model.eval()
@@ -80,7 +80,7 @@ def test(rank, args, shared_model, counter):
         prob = F.softmax(logit, dim=-1)
         action = prob.max(1, keepdim=True)[1].numpy()
 
-        action_out = ACTIONS[action[0, 0]]
+        action_out = ACTIONS[args.move_set][action[0, 0]]
 
         print(f"{args.env_name} || {' + '.join(action_out):^13s} || ", end='\r')
 

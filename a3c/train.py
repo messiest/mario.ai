@@ -19,7 +19,7 @@ import torch.nn.functional as F
 from models import ActorCritic
 from mario_actions import ACTIONS
 from mario_wrapper import create_mario_env
-from shared_adam import SharedAdam
+from optimizers import SharedAdam
 from utils import fetch_name, get_epsilon, FontColor, save_checkpoint
 
 
@@ -46,7 +46,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
     text_color = FontColor.RED if select_sample else FontColor.GREEN
     print(text_color + f"Process: {rank: 3d} | Sampling: {str(select_sample):5s} | DEVICE: {device}", FontColor.END)
 
-    env = create_mario_env(args.env_name, args.move_set)
+    env = create_mario_env(args.env_name, ACTIONS[args.move_set])
     # env.seed(args.seed + rank)
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
@@ -106,7 +106,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
             log_prob = log_prob.gather(1, action)
 
-            action_out = ACTIONS[action.item()]
+            action_out = ACTIONS[args.move_set][action.item()]
 
             state, reward, done, info = env.step(action.item())
             done = done or episode_length >= args.max_episode_length

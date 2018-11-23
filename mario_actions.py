@@ -19,4 +19,8 @@ ACTIONS = np.array([
 ])
 
 
-ACTIONS = COMPLEX_MOVEMENT
+ACTIONS = {
+    'complex': COMPLEX_MOVEMENT,
+    'simple': SIMPLE_MOVEMENT,
+    'right': RIGHT_ONLY,
+}

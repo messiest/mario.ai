@@ -13,10 +13,11 @@ import torch
 import torch.multiprocessing as _mp
 
 from models import ActorCritic
-from shared_adam import SharedAdam
+from optimizers import SharedAdam
 from mario_wrapper import create_mario_env
 from a3c import train, test
 from utils import FontColor, fetch_name
+from mario_actions import ACTIONS
 
 
 parser = argparse.ArgumentParser(description='A3C')
@@ -42,7 +43,7 @@ parser.add_argument('--model-id', type=str, default=fetch_name().strip(), help='
 parser.add_argument('--start-fresh', action='store_true', help='start training a new model')
 parser.add_argument('--load-model', default=None, type=str, help='model name to restore')
 parser.add_argument('--verbose', action='store_true', help='print actions for debugging')
-parser.add_argument('--move-set', default=COMPLEX_MOVEMENT, help='the set of possible actions')
+parser.add_argument('--move-set', default='complex', type=str, help='the set of possible actions')
 
 
 args = parser.parse_args()
@@ -62,7 +63,7 @@ def main(args):
     os.environ['OMP_NUM_THREADS'] = '1'
     os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
-    env = create_mario_env(args.env_name, args.move_set)
+    env = create_mario_env(args.env_name, ACTIONS[args.move_set])
     if args.record:
         env = gym.wrappers.Monitor(env, "playback", force=True)
 
