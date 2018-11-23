@@ -45,9 +45,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
     text_color = FontColor.RED if select_sample else FontColor.GREEN
     print(text_color + f"Process: {rank: 3d} | Sampling: {str(select_sample):5s} | DEVICE: {device}", FontColor.END)
 
-    FloatTensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-    DoubleTensor = torch.cuda.DoubleTensor if torch.cuda.is_available() else torch.DoubleTensor
-    ByteTensor = torch.cuda.ByteTensor if torch.cuda.is_available() else torch.ByteTensor
+    # FloatTensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+    # DoubleTensor = torch.cuda.DoubleTensor if torch.cuda.is_available() else torch.DoubleTensor
+    # ByteTensor = torch.cuda.ByteTensor if torch.cuda.is_available() else torch.ByteTensor
 
     env = create_mario_env(args.env_name, args.move_set)
     # env.seed(args.seed + rank)
@@ -135,16 +135,16 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
         R = torch.zeros(1, 1)
         if not done:
-            state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
-            value, _, _ = model((state_inp, (hx, cx)))
+            value, _, _ = model((state.unsqueeze(0), (hx, cx)))
             R = value.detach()
 
         values.append(R)
         policy_loss = 0
         value_loss = 0
-        R = Variable(R).type(FloatTensor)
+        # R = Variable(R).type(FloatTensor)
+        # R = R.detach()
 
-        gae = torch.zeros(1, 1).type(FloatTensor)
+        gae = torch.zeros(1, 1)  #.type(FloatTensor)
 
         for i in reversed(range(len(rewards))):
             R = args.gamma * R + rewards[i]
@@ -152,33 +152,38 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             value_loss = value_loss + 0.5 * advantage.pow(2)
 
             # Generalized Advantage Estimation
-            delta_t = rewards[i] + args.gamma * values[i + 1].item() - values[i].item()
+            # delta_t = rewards[i] + args.gamma * values[i + 1].item() - values[i].item()
+            delta_t = rewards[i] + args.gamma * values[i + 1] - values[i]
             gae = gae * args.gamma * args.tau + delta_t
 
-            policy_loss = policy_loss - \
-                log_probs[i] * Variable(gae).type(FloatTensor) - \
-                args.entropy_coef * entropies[i]
+            # policy_loss = policy_loss - \
+            #     log_probs[i] * Variable(gae).type(FloatTensor) - \
+            #     args.entropy_coef * entropies[i]
 
-        total_loss = policy_loss + args.value_loss_coef * value_loss
+            policy_loss = policy_loss - \
+                          log_probs[i] * gae.detach() - \
+                          args.entropy_coef * entropies[i]
+
+        # total_loss = policy_loss + args.value_loss_coef * value_loss
 
         optimizer.zero_grad()
-        (total_loss).backward()
+        (policy_loss + args.value_loss_coef * value_loss).backward()
         nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
 
         ensure_shared_grads(model, shared_model)
 
         optimizer.step()
 
-        gc.collect()
+        # gc.collect()
 
 
 def test(rank, args, shared_model, counter):
 
     torch.manual_seed(args.seed + rank)
 
-    FloatTensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-    DoubleTensor = torch.cuda.DoubleTensor if torch.cuda.is_available() else torch.DoubleTensor
-    ByteTensor = torch.cuda.ByteTensor if torch.cuda.is_available() else torch.ByteTensor
+    # FloatTensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+    # DoubleTensor = torch.cuda.DoubleTensor if torch.cuda.is_available() else torch.DoubleTensor
+    # ByteTensor = torch.cuda.ByteTensor if torch.cuda.is_available() else torch.ByteTensor
 
     env = create_mario_env(args.env_name)
     if args.record:
@@ -193,12 +198,11 @@ def test(rank, args, shared_model, counter):
 
     state = env.reset()
     state = torch.from_numpy(state)
-
-    start_time = time.time()
     reward_sum = 0
     done = True
     episode_length = 0
     actions = deque(maxlen=4000)
+    start_time = time.time()
     while True:
         episode_length += 1
         # shared model sync
@@ -213,22 +217,22 @@ def test(rank, args, shared_model, counter):
 
         # with torch.no_grad():
         # state_inp = Variable(state.unsqueeze(0)).type(FloatTensor)
-        state = state.unsqueeze(0)
+        # state = state.unsqueeze(0)
 
-        if torch.cuda.is_available():
-            state, hx, cx = state.to('cuda'), hx.to('cuda'), cx.to('cuda')
+        # if torch.cuda.is_available():
+        #     state, hx, cx = state.to('cuda'), hx.to('cuda'), cx.to('cuda')
 
         with torch.no_grad():
-            value, logit, (hx, cx) = model((state, (hx, cx)))
+            value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
         prob = F.softmax(logit, dim=-1)
-        action = prob.max(-1, keepdim=True)[1]
+        action = prob.max(1, keepdim=True)[1].numpy()
 
-        action_out = ACTIONS[action]
+        action_out = ACTIONS[action[0, 0]]
 
         print(f"{args.env_name} || {' + '.join(action_out):^13s} || ", end='\r')
 
-        state, reward, done, info = env.step(action.item())
+        state, reward, done, info = env.step(action[0, 0])  # action.item()
 
         save_file = os.getcwd() + f'/save/{args.env_name}_performance.csv'
 
@@ -249,6 +253,7 @@ def test(rank, args, shared_model, counter):
                         'world',
                         'x_pos',
                 ]
+
             with open(save_file, 'a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow(headers)
@@ -258,9 +263,9 @@ def test(rank, args, shared_model, counter):
 
         reward_sum += reward
 
-        actions.append(action.detach())
+        actions.append(action[0, 0])
 
-        if actions.count(actions[0]) == actions.maxlen:
+        if actions.count(actions[0]) >= actions.maxlen:
             done = True
 
         if done:
@@ -270,7 +275,7 @@ def test(rank, args, shared_model, counter):
                 f"{args.env_name} || " + \
                 f"{' + '.join(action_out):^13s} || " + \
                 f"ID: {args.model_id}, " + \
-                f"Time: {time.strftime('%H:%M:%Ss', time.gmtime(t))}, " + \
+                f"Time: {time.strftime('%H:%M:%S', time.gmtime(t)):^10s}, " + \
                 f"FPS: {counter.value/t: 6.2f}, " + \
                 f"Reward: {reward_sum: 10.2f}, " + \
                 f"Episode Length: {episode_length: 7d}, " + \
@@ -300,11 +305,11 @@ def test(rank, args, shared_model, counter):
                 writer = csv.writer(file)
                 writer.writerows([data])
 
-            time.sleep(3.)
             reward_sum = 0
             episode_length = 0
             actions.clear()
             state = env.reset()
+            time.sleep(60.)
 
         state = torch.from_numpy(state)
 
