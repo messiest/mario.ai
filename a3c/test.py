@@ -87,21 +87,23 @@ def test(rank, args, shared_model, counter):
 
         if not os.path.exists(save_file):
             headers = [
-                        'id',
-                        'time',
-                        'steps',
-                        'reward',
-                        'episode_length',
-                        'coins',
-                        'flag_get',
-                        'life',
-                        'score',
-                        'stage',
-                        'status',
-                        'time',
-                        'world',
-                        'x_pos',
-                ]
+                'environment',
+                'algorithm',
+                'id',
+                'time',
+                'steps',
+                'reward',
+                'episode_length',
+                'coins',
+                'flag_get',
+                'life',
+                'score',
+                'stage',
+                'status',
+                'time_remaining',
+                'world',
+                'x_pos',
+            ]
 
             with open(save_file, 'a', newline='') as file:
                 writer = csv.writer(file)
@@ -134,6 +136,8 @@ def test(rank, args, shared_model, counter):
             )
 
             data = [
+                args.env_name,
+                args.algorithm,
                 args.model_id,  # ID
                 t,  # Time
                 counter.value,  # Total Steps

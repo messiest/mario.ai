@@ -42,6 +42,7 @@ parser.add_argument('--load-model', default=None, type=str, help='model name to 
 parser.add_argument('--verbose', action='store_true', help='print actions for debugging')
 parser.add_argument('--debug', action='store_true', help='print versions of essential packages')
 parser.add_argument('--move-set', default='complex', type=str, help='the set of possible actions')
+parser.add_argument('--algorithm', default='A3C', type=str, help='algorithm being used')
 args = parser.parse_args()
 
 
@@ -140,7 +141,7 @@ def main(args):
             )
         p.start()
         processes.append(p)
- 
+
     for p in processes:
         p.join()
 
