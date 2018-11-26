@@ -141,7 +141,11 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             print("delta_t", type(delta_t), delta_t.is_cuda)
             # assert gae.is_cuda == delta_t.is_cuda, "CUDA mismatch!"
 
-            gae = gae * args.gamma * args.tau + delta_t
+            if torch.cuda.is_available():
+                gae = gae.cuda() * args.gamma * args.tau + delta_t.cuda()
+            else:
+                gae = gae.cpu() * args.gamma * args.tau + delta_t.cpu()
+
 
             # gae.detach()
             policy_loss = policy_loss - \
