@@ -128,6 +128,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
                 gae.cuda()
 
             R = args.gamma * R + rewards[i]
+            if torch.cuda.is_available():
+                R.cuda()
 
             print('R', type(R), R.is_cuda)
             print('values[i]', type(values[i]), values[i].is_cuda)
