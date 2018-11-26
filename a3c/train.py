@@ -115,7 +115,12 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             # R = value.item()
 
         if torch.cuda.is_available():
-            R.cuda()
+            print("\nR ASSIGNMENT")
+            print("R", type(R), R.is_cuda)
+            R = R.cuda()
+            print("R", type(R), R.is_cuda)
+            print("\n")
+
 
         values.append(R)
         policy_loss = 0
