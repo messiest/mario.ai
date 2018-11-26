@@ -136,9 +136,8 @@ def main(args):
         if torch.cuda.is_available():
             # device = 'cuda'
             # device = f"cuda:{rank % torch.cuda.device_count()}"
-            # device = rank % torch.cuda.device_count()
-            device = 0
-
+            device = rank % torch.cuda.device_count()
+            # device = 0
         if rank < sample_val:  # random action
             p = mp.Process(
                 target=train,
