@@ -64,7 +64,7 @@ class ActorCritic(nn.Module):
 
     def forward(self, inputs):
         x, (hx, cx) = inputs
-        # x, hx, cx = x.to(self.device), hx.to(self.device), cx.to(self.device)
+        x, hx, cx = x.to(self.device), hx.to(self.device), cx.to(self.device)
 
         x = F.elu(self.conv1(x))
         x = F.elu(self.conv2(x))
