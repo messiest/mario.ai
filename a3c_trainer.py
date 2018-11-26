@@ -54,6 +54,8 @@ def debug():  # TODO: Move this to utils
     print(f"pytorch {torch.__version__}")
     print(f"torchvision {torchvision.__version__}")
     print(f"gym {gym.__version__}")
+    print(f"CUDA Available: {torch.cuda.is_available()}")
+    print(f"CUDA Cores: {torch.cuda.device_count()}")
 
 
 def restore_checkpoint(file, dir=args.checkpoint_dir):
