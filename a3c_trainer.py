@@ -66,9 +66,9 @@ def restore_checkpoint(file, dir=args.checkpoint_dir):
 def main(args):
     if args.debug:
         debug()
-    os.environ['OMP_NUM_THREADS'] = '1'
-    # os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-    # os.environ["CUDA_VISIBLE_DEVICES"]="1"
+    os.environ['OMP_NUM_THREADS'] = "1"
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
     if args.record:
