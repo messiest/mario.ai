@@ -140,7 +140,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             print("delta_t", type(delta_t), delta_t.is_cuda)
             # assert gae.is_cuda == delta_t.is_cuda, "CUDA mismatch!"
 
-            gae = gae * args.gamma * args.tau + delta_t
+            gae = gae.cpu() * args.gamma * args.tau + delta_t.cpu()
 
             policy_loss = policy_loss - \
                           log_probs[i] * gae.detach() - \
