@@ -1,16 +1,11 @@
 import os
 import gc
-# import csv
-# import time
 import random
-# from fnmatch import filter
 from collections import deque
 from itertools import count
 
 import numpy as np
-# import cv2
 import gym
-# from gym import wrappers
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -89,7 +84,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
                 reason = 'choice'
 
             if torch.cuda.is_available():
-                action = action.to(f'{device}')
+                action = action.to('cuda')
 
             log_prob = log_prob.gather(1, action)
 
@@ -150,6 +145,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             # print("args.tau", type(args.tau))
             # print("delta_t", type(delta_t), delta_t.is_cuda)
             # assert gae.is_cuda == delta_t.is_cuda, "CUDA mismatch!"
+
+            gae.cpu()
 
             gae = gae * args.gamma * args.tau + delta_t
 
