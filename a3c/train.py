@@ -132,6 +132,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             # if torch.cuda.is_available():
             #     gae.cuda()
 
+            print(i, type(i), end='\n')
+
             R = args.gamma * R + rewards[i]
             advantage = R - values[i]
             value_loss = value_loss + 0.5 * advantage.pow(2)
