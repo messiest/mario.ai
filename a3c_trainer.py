@@ -116,11 +116,8 @@ def main(args):
     counter = mp.Value('i', args.start_step)
     lock = mp.Lock()
 
-    p = mp.Process(target=test, args=(args.num_processes, args, shared_model, counter))
 
-    p.start()
-    processes.append(p)
-
+    # Queue training processes
     num_processes = args.num_processes
     no_sample = args.non_sample  # count of non-sampling processes
 
@@ -132,8 +129,9 @@ def main(args):
     for rank in range(0, num_processes):
         device = 'cpu'
         if torch.cuda.is_available():
-            device = 'cuda'
+            # device = 'cuda'
             # device = f"cuda:{rank % torch.cuda.device_count()}"
+            device = rank % torch.cuda.device_count()
         if rank < sample_val:  # random action
             p = mp.Process(
                 target=train,
@@ -147,6 +145,15 @@ def main(args):
         p.start()
         processes.append(p)
         time.sleep(1.)
+
+    # Queue test process
+    p = mp.Process(
+        target=test,
+        args=(args.num_processes, args, shared_model, counter, device)
+    )
+
+    p.start()
+    processes.append(p)
 
     for p in processes:
         p.join()

@@ -31,8 +31,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
     if torch.cuda.is_available():
-        model.cuda(rank % torch.cuda.device_count())
-        # model.to(device)
+        model.cuda(device)
 
     if optimizer is None:
         optimizer = optim.Adam(shared_model.parameters(), lr=args.lr)
@@ -83,8 +82,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
                 reason = 'choice'
 
             if torch.cuda.is_available():
-                action = action.cuda()
-                value = value.cuda()
+                action = action.cuda(device)
+                value = value.cuda(device)
 
             log_prob = log_prob.gather(1, action)
 
@@ -118,7 +117,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         if torch.cuda.is_available():
             # print("\nR ASSIGNMENT")
             # print("R", type(R), R.is_cuda)
-            R = R.cuda()
+            R = R.cuda(device)
             # print("R", type(R), R.is_cuda)
             # print("\n")
 
@@ -131,11 +130,11 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         for i in reversed(range(len(rewards))):
 
             if torch.cuda.is_available():
-                gae = gae.cuda()
+                gae = gae.cuda(device)
 
             R = args.gamma * R + rewards[i]
             if torch.cuda.is_available():
-                R = R.cuda()
+                R = R.cuda(device)
 
             # print('R', type(R), R.is_cuda)
             # print('values[i]', type(values[i]), values[i].is_cuda)
@@ -146,14 +145,14 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             # Generalized Advantage Estimation
             delta_t = rewards[i] + args.gamma * values[i + 1] - values[i]
             if torch.cuda.is_available():
-                delta_t = delta_t.cuda()
+                delta_t = delta_t.cuda(device)
 
             # print("gae", type(gae), gae.is_cuda)
             # print("delta_t", type(delta_t), delta_t.is_cuda)
             # assert gae.is_cuda == delta_t.is_cuda, "CUDA mismatch!"
 
             if torch.cuda.is_available():
-                gae = gae.cuda() * args.gamma * args.tau + delta_t.cuda()
+                gae = gae.cuda(device) * args.gamma * args.tau + delta_t.cuda(device)
             else:
                 gae = gae.cpu() * args.gamma * args.tau + delta_t.cpu()
 

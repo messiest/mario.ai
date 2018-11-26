@@ -19,7 +19,7 @@ from utils import get_epsilon, FontColor, save_checkpoint
 from a3c.utils import ensure_shared_grads, choose_action
 
 
-def test(rank, args, shared_model, counter):
+def test(rank, args, shared_model, counter, device):
     torch.manual_seed(args.seed + rank)
 
     env = create_mario_env(args.env_name)
@@ -29,7 +29,7 @@ def test(rank, args, shared_model, counter):
 
     model = ActorCritic(env.observation_space.shape[0], len(ACTIONS[args.move_set]))
     if torch.cuda.is_available():
-        model.cuda(rank % torch.cuda.device_count())
+        model.cuda(device)
         # model.to(device)
     model.eval()
 
