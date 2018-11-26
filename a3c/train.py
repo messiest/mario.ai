@@ -125,7 +125,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         for i in reversed(range(len(rewards))):
 
             if torch.cuda.is_available():
-                gae.cuda()
+                gae.to('cpu')
 
             print(i, type(i), end='\n')
 
@@ -136,11 +136,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             # Generalized Advantage Estimation
             delta_t = rewards[i] + args.gamma * values[i + 1] - values[i]
             if torch.cuda.is_available():
-                delta_t.cuda()
+                delta_t.to('cpu')
 
             print("gae", type(gae), gae.is_cuda)
-            print("args.gamma", type(args.gamma))
-            print("args.tau", type(args.tau))
             print("delta_t", type(delta_t), delta_t.is_cuda)
             # assert gae.is_cuda == delta_t.is_cuda, "CUDA mismatch!"
 
