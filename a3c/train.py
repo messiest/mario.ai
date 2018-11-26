@@ -26,7 +26,6 @@ from a3c.utils import ensure_shared_grads, choose_action
 
 
 def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu', select_sample=True):
-    print("DEVICE", shared_model.device)
     torch.manual_seed(args.seed + rank)
 
     text_color = FontColor.RED if select_sample else FontColor.GREEN
@@ -36,6 +35,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
     # env.seed(args.seed + rank)
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
+    if torch.cuda.is_available():
+        model.cuda()
 
     if torch.cuda.is_available():
         model.cuda()
