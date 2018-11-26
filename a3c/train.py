@@ -115,11 +115,11 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             # R = value.item()
 
         if torch.cuda.is_available():
-            print("\nR ASSIGNMENT")
-            print("R", type(R), R.is_cuda)
+            # print("\nR ASSIGNMENT")
+            # print("R", type(R), R.is_cuda)
             R = R.cuda()
-            print("R", type(R), R.is_cuda)
-            print("\n")
+            # print("R", type(R), R.is_cuda)
+            # print("\n")
 
 
         values.append(R)
@@ -130,14 +130,14 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         for i in reversed(range(len(rewards))):
 
             if torch.cuda.is_available():
-                gae.cuda()
+                gae = gae.cuda()
 
             R = args.gamma * R + rewards[i]
             if torch.cuda.is_available():
-                R.cuda()
+                R = R.cuda()
 
-            print('R', type(R), R.is_cuda)
-            print('values[i]', type(values[i]), values[i].is_cuda)
+            # print('R', type(R), R.is_cuda)
+            # print('values[i]', type(values[i]), values[i].is_cuda)
 
             advantage = R - values[i]
             value_loss = value_loss + 0.5 * advantage.pow(2)
@@ -147,8 +147,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             if torch.cuda.is_available():
                 delta_t.cuda()
 
-            print("gae", type(gae), gae.is_cuda)
-            print("delta_t", type(delta_t), delta_t.is_cuda)
+            # print("gae", type(gae), gae.is_cuda)
+            # print("delta_t", type(delta_t), delta_t.is_cuda)
             # assert gae.is_cuda == delta_t.is_cuda, "CUDA mismatch!"
 
             if torch.cuda.is_available():
@@ -156,8 +156,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             else:
                 gae = gae.cpu() * args.gamma * args.tau + delta_t.cpu()
 
-
-            # gae.detach()
             policy_loss = policy_loss - \
                           log_probs[i] * gae - \
                           args.entropy_coef * entropies[i]
