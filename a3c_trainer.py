@@ -111,7 +111,7 @@ def main(args):
 
     print(
         FontColor.BLUE + \
-        f"CPUs:     {mp.cpu_count(): 3d} | " + \
+        f"CPUs:    {mp.cpu_count(): 3d} | " + \
         f"GPUs: {None if not torch.cuda.is_available() else torch.cuda.device_count()}" + \
         FontColor.END
     )
@@ -154,7 +154,7 @@ def main(args):
     # Queue test process
     p = mp.Process(
         target=test,
-        args=(args.num_processes, args, shared_model, counter, device)
+        args=(args.num_processes, args, shared_model, counter, 0)
     )
 
     p.start()
