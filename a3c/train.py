@@ -119,6 +119,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             value, _, _ = model((state.unsqueeze(0), (hx, cx)))
             R = value.detach()
 
+        if torch.cuda.is_available():
+            R.cuda()
+
         values.append(R)
         policy_loss = 0
         value_loss = 0
