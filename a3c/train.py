@@ -126,7 +126,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         policy_loss = 0
         value_loss = 0
 
-        gae = torch.zeros(1, 1)  #.type(FloatTensor)
+        gae = torch.zeros(1, 1)
         if torch.cuda.is_available():
             gae.cuda()
 
@@ -137,6 +137,14 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
             # Generalized Advantage Estimation
             delta_t = rewards[i] + args.gamma * values[i + 1] - values[i]
+            if torch.cuda.is_available():
+                delta_t.cuda()
+
+            print("gae", type(gae))
+            print("args.gamma", type(args.gamma))
+            print("args.tau", type(args.tau))
+            print("delta_t", type(delta_t))
+
             gae = gae * args.gamma * args.tau + delta_t
 
             policy_loss = policy_loss - \
