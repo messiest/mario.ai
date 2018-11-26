@@ -81,7 +81,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
                 reason = 'choice'
 
             if torch.cuda.is_available():
-                action = action.to('cuda')
+                action = action.cuda()
+                value = value.cuda()
+
 
             log_prob = log_prob.gather(1, action)
 
@@ -99,7 +101,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
                 state = env.reset()
 
             state = torch.from_numpy(state)
-            values.append(value.to(device))
+            values.append(value)
             log_probs.append(log_prob)
             rewards.append(reward)
 
