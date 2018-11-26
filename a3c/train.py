@@ -117,7 +117,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         R = torch.zeros(1, 1)
         if not done:
             value, _, _ = model((state.unsqueeze(0), (hx, cx)))
-            R = value.detach()
+            # R = value.detach()
 
         # if torch.cuda.is_available():
         #     R.cuda()
@@ -143,11 +143,11 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             # if torch.cuda.is_available():
             #     delta_t.cuda()
 
-            print("gae", type(gae), gae.is_cuda)
-            print("args.gamma", type(args.gamma))
-            print("args.tau", type(args.tau))
-            print("delta_t", type(delta_t), delta_t.is_cuda)
-            assert gae.is_cuda == delta_t.is_cuda, "CUDA mismatch!"
+            # print("gae", type(gae), gae.is_cuda)
+            # print("args.gamma", type(args.gamma))
+            # print("args.tau", type(args.tau))
+            # print("delta_t", type(delta_t), delta_t.is_cuda)
+            # assert gae.is_cuda == delta_t.is_cuda, "CUDA mismatch!"
 
             gae = gae * args.gamma * args.tau + delta_t
 
