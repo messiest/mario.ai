@@ -79,7 +79,8 @@ def main(args):
 
     shared_model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
     if torch.cuda.is_available():
-        shared_model.cuda()
+        # shared_model.cuda()
+        shared_model.cpu()
 
     shared_model.share_memory()
 
