@@ -68,11 +68,10 @@ def main(args):
         debug()
     os.environ['OMP_NUM_THREADS'] = "1"
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    devices = ",".join(list(range(torch.cuda.device_count())))
+    devices = ",".join([str(i) for i in range(torch.cuda.device_count())])
     os.environ["CUDA_VISIBLE_DEVICES"] = devices
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
-
     if args.record:
         env = gym.wrappers.Monitor(env, "playback", force=True)
 
