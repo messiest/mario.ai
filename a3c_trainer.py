@@ -78,7 +78,6 @@ def main(args):
     shared_model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
     if torch.cuda.is_available():
         shared_model = shared_model.cuda()
-        # shared_model.cpu()
 
     shared_model.share_memory()
 
@@ -132,7 +131,6 @@ def main(args):
     for rank in range(0, num_processes):
         device = 'cpu'
         if torch.cuda.is_available():
-            # device = 'cuda'
             # device = f"cuda:{rank % torch.cuda.device_count()}"
             device = rank % torch.cuda.device_count()
             # device = 0
