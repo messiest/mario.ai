@@ -67,8 +67,8 @@ def main(args):
     if args.debug:
         debug()
     os.environ['OMP_NUM_THREADS'] = '1'
-    os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"]="1"
+    # os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+    # os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
     if args.record:
@@ -121,7 +121,6 @@ def main(args):
     p = mp.Process(target=test, args=(args.num_processes, args, shared_model, counter))
 
     p.start()
-    print("HERE")
     processes.append(p)
 
     num_processes = args.num_processes
