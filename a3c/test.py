@@ -9,6 +9,7 @@ from itertools import count
 import gym
 import torch
 import torch.nn.functional as F
+from xvfbwrapper import Xvfb
 
 from models import ActorCritic
 from mario_actions import ACTIONS
@@ -94,7 +95,7 @@ def test(rank, args, shared_model, counter, device):
                 writer.writerow(headers)
 
         env.render()
-        done = done or episode_length >= args.max_episode_length # or info['flag_get']
+        done = done or episode_length >= args.max_episode_length
 
         reward_sum += reward
 

@@ -4,7 +4,7 @@ ENVIRONMENT=$1
 
 echo Training $ENVIRONMENT model...
 
-xvfb-run -s "-screen 0 1400x900x24" python main.py --env-name $ENVIRONMENT --record --start-fresh --non-sample 8
+xvfb-run -s "-screen 0 1400x900x24" python a3c_trainer.py --env-name $ENVIRONMENT --record --start-fresh
 
 # git add checkpoints/
 # git add playback/
