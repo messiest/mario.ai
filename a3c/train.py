@@ -112,8 +112,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         R = torch.zeros(1, 1)
         if not done:
             value, _, _ = model((state.unsqueeze(0), (hx, cx)))
-            # R = value.detach()
-            R = value.item()
+            R = value.detach()
+            # R = value.item()
 
         # if torch.cuda.is_available():
         #     R.cuda()
@@ -126,7 +126,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         for i in reversed(range(len(rewards))):
 
             if torch.cuda.is_available():
-                gae.to('cpu')
+                gae.cpu()
 
             R = args.gamma * R + rewards[i]
             advantage = R - values[i]
@@ -135,7 +135,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             # Generalized Advantage Estimation
             delta_t = rewards[i] + args.gamma * values[i + 1] - values[i]
             if torch.cuda.is_available():
-                delta_t.to('cpu')
+                delta_t.cpu()
 
             print("gae", type(gae), gae.is_cuda)
             print("delta_t", type(delta_t), delta_t.is_cuda)
