@@ -68,7 +68,10 @@ def main(args):
         debug()
     os.environ['OMP_NUM_THREADS'] = "1"
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    devices = ",".join(i for i in range(torch.cuda.device_count()))
+    os.environ["CUDA_VISIBLE_DEVICES"] = devices
+
+    print(devices)
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
     if args.record:
@@ -111,6 +114,7 @@ def main(args):
         f"GPUs: {None if not torch.cuda.is_available() else torch.cuda.device_count()}" + \
         FontColor.END
     )
+
     processes = []
 
     counter = mp.Value('i', args.start_step)
