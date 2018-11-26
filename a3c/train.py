@@ -33,9 +33,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
     if torch.cuda.is_available():
         model.cuda()
 
-    if torch.cuda.is_available():
-        model.cuda()
-
     if optimizer is None:
         optimizer = optim.Adam(shared_model.parameters(), lr=args.lr)
 
@@ -102,7 +99,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
                 state = env.reset()
 
             state = torch.from_numpy(state)
-            values.append(value)
+            values.append(value.to(device))
             log_probs.append(log_prob)
             rewards.append(reward)
 
