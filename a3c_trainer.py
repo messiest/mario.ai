@@ -33,7 +33,7 @@ parser.add_argument('--no-shared', default=False, help='use an optimizer without
 parser.add_argument('--use-cuda', default=True, help='run on gpu.')
 parser.add_argument('--record', action='store_true', help='record playback of tests')
 parser.add_argument('--save-interval', type=int, default=100, help='model save interval (default: 100)')
-parser.add_argument('--non-sample', type=int, default=_mp.cpu_count() - 2, help='number of non sampling processes (default: 2)')
+parser.add_argument('--non-sample', type=int, default=int(_mp.cpu_count() / 2), help='number of non sampling processes (default: 2)')
 parser.add_argument('--checkpoint-dir', type=str, default='checkpoints', help='directory to save checkpoints')
 parser.add_argument('--start-step', type=int, default=0, help='training step on which to start')
 parser.add_argument('--model-id', type=str, default=fetch_name(), help='name id for the model')

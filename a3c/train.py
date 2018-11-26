@@ -78,7 +78,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
             reason = ''
             epsilon = get_epsilon(step)
-            if select_sample and random.random() < epsilon:
+            if select_sample:  # and random.random() < epsilon:
                 action = torch.randint(0, env.action_space.n, (1,1)).detach()
                 reason = 'random'
             else:
