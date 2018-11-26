@@ -77,7 +77,7 @@ def main(args):
     shared_model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
     if torch.cuda.is_available():
         shared_model.cuda()
-        
+
     shared_model.share_memory()
 
     optimizer = SharedAdam(shared_model.parameters(), lr=args.lr)
@@ -107,7 +107,7 @@ def main(args):
 
     print(
         FontColor.BLUE + \
-        f"CPUs:     {mp.cpu_count(): 2d} | " + \
+        f"CPUs:     {mp.cpu_count(): 3d} | " + \
         f"GPUs: {None if not torch.cuda.is_available() else torch.cuda.device_count()}" + \
         FontColor.END
     )

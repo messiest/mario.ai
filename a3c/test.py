@@ -119,8 +119,8 @@ def test(rank, args, shared_model, counter):
             )
 
             data = [
-                args.env_name,
-                args.algorithm,
+                args.env_name,  # Environment
+                args.algorithm,  # Algorithm
                 args.model_id,  # ID
                 t,  # Time
                 counter.value,  # Total Steps
