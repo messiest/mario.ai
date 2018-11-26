@@ -142,8 +142,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
             gae = gae.cpu() * args.gamma * args.tau + delta_t.cpu()
 
+            # gae.detach()
             policy_loss = policy_loss - \
-                          log_probs[i] * gae - \  # gae.detach()
+                          log_probs[i] * gae - \
                           args.entropy_coef * entropies[i]
 
         optimizer.zero_grad()
