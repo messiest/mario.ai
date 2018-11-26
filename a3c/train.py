@@ -86,7 +86,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             if torch.cuda.is_available():
                 action = action.to('cuda')
 
-            log_prob = log_prob.gather(1, action)
+            log_prob = log_prob.gather(1, action).detach()
 
             action_out = ACTIONS[args.move_set][action.item()]
 
