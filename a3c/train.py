@@ -31,7 +31,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
     if torch.cuda.is_available():
-        model.cuda()
+        # model.cuda()
+        model.to(device)
 
     if optimizer is None:
         optimizer = optim.Adam(shared_model.parameters(), lr=args.lr)
@@ -145,7 +146,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             # Generalized Advantage Estimation
             delta_t = rewards[i] + args.gamma * values[i + 1] - values[i]
             if torch.cuda.is_available():
-                delta_t.cuda()
+                delta_t = delta_t.cuda()
 
             # print("gae", type(gae), gae.is_cuda)
             # print("delta_t", type(delta_t), delta_t.is_cuda)
@@ -168,7 +169,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
         optimizer.step()
 
-        # gc.collect()
+        gc.collect()
 
 
 if __name__ == "__main__":

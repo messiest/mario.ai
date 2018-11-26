@@ -29,7 +29,8 @@ def test(rank, args, shared_model, counter):
 
     model = ActorCritic(env.observation_space.shape[0], len(ACTIONS[args.move_set]))
     if torch.cuda.is_available():
-        model.cuda()
+        # model.cuda()
+        model.to(device)
     model.eval()
 
     state = env.reset()

@@ -132,8 +132,8 @@ def main(args):
     for rank in range(0, num_processes):
         device = 'cpu'
         if torch.cuda.is_available():
-            device = 'cuda'
-            # device = f"cuda:{rank % torch.cuda.device_count()}"
+            # device = 'cuda'
+            device = f"cuda:{rank % torch.cuda.device_count()}"
         if rank < sample_val:  # random action
             p = mp.Process(
                 target=train,
@@ -146,6 +146,7 @@ def main(args):
             )
         p.start()
         processes.append(p)
+        time.sleep(1.)
 
     for p in processes:
         p.join()
