@@ -71,15 +71,13 @@ def main(args):
     devices = ",".join([str(i) for i in range(torch.cuda.device_count())])
     os.environ["CUDA_VISIBLE_DEVICES"] = devices
 
-    print(devices)
-
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
     if args.record:
         env = gym.wrappers.Monitor(env, "playback", force=True)
 
     shared_model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
     if torch.cuda.is_available():
-        shared_model = shared_model.cuda()
+        shared_model = shared_model.cuda(non_blocking=True)
         # shared_model.cpu()
 
     shared_model.share_memory()
