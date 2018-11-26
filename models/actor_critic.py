@@ -34,7 +34,8 @@ class ActorCritic(nn.Module):
 
         self.device = 'cpu'
         if torch.cuda.is_available():
-            self.device = torch.cuda.get_device_name()
+            # self.device = torch.cuda.get_device_name()
+            self.device = 'cuda'
 
         self.conv1 = nn.Conv2d(num_inputs, 32, 3, stride=2, padding=1)
         self.conv2 = nn.Conv2d(32, 32, 3, stride=2, padding=1)
