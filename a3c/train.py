@@ -124,6 +124,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         value_loss = 0
 
         gae = torch.zeros(1, 1)  #.type(FloatTensor)
+        if torch.cuda.is_available():
+            gae.cuda()
 
         for i in reversed(range(len(rewards))):
             R = args.gamma * R + rewards[i]
