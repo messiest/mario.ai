@@ -46,8 +46,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
     for t in count(start=counter.value):
         if t % args.save_interval == 0 and t > 0:  # and rank == 1:
             save_checkpoint(shared_model, optimizer, args, counter.value)
-        # env.render()  # don't render training environments
+
         model.load_state_dict(shared_model.state_dict())
+
         if done:
             cx = torch.zeros(1, 512)
             hx = torch.zeros(1, 512)
@@ -72,7 +73,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
             reason = ''
             epsilon = get_epsilon(step)
-            if select_sample:  # and random.random() < epsilon:
+            if select_sample:
                 action = torch.randint(0, env.action_space.n, (1,1)).detach()
                 reason = 'random'
             else:
@@ -83,7 +84,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             if torch.cuda.is_available():
                 action = action.cuda()
                 value = value.cuda()
-
 
             log_prob = log_prob.gather(1, action)
 
@@ -128,6 +128,10 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
                 gae.cuda()
 
             R = args.gamma * R + rewards[i]
+
+            print('R', type(R), R.is_cuda)
+            print('values[i]', type(values[i]), values[i].is_cuda)
+
             advantage = R - values[i]
             value_loss = value_loss + 0.5 * advantage.pow(2)
 
