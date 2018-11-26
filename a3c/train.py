@@ -31,8 +31,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
     if torch.cuda.is_available():
-        # model.cuda()
-        model.to(device)
+        model.cuda(rank % torch.cuda.device_count())
+        # model.to(device)
 
     if optimizer is None:
         optimizer = optim.Adam(shared_model.parameters(), lr=args.lr)
