@@ -86,7 +86,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             if torch.cuda.is_available():
                 action = action.to('cuda')
 
-            log_prob = log_prob.gather(1, action).detach()
+            log_prob = log_prob.gather(1, action)
 
             action_out = ACTIONS[args.move_set][action.item()]
 
@@ -143,7 +143,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             gae = gae.cpu() * args.gamma * args.tau + delta_t.cpu()
 
             policy_loss = policy_loss - \
-                          log_probs[i] * gae.detach() - \
+                          log_probs[i] * gae - \  # gae.detach()
                           args.entropy_coef * entropies[i]
 
         optimizer.zero_grad()
