@@ -170,7 +170,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         ensure_shared_grads(model, shared_model)
 
         optimizer.step()
-
+        time.sleep(5.)
+        
         gc.collect()
 
 

@@ -12,7 +12,7 @@ from models import ActorCritic
 from optimizers import SharedAdam
 from mario_wrapper import create_mario_env
 from a3c import train, test
-from utils import FontColor, fetch_name
+from utils import FontColor, fetch_name, debug, restore_checkpoint
 from mario_actions import ACTIONS
 
 
@@ -51,22 +51,9 @@ args = parser.parse_args()
 mp = _mp.get_context('spawn')
 
 
-def debug():  # TODO: Move this to utils
-    print(f"pytorch {torch.__version__}")
-    print(f"torchvision {torchvision.__version__}")
-    print(f"gym {gym.__version__}")
-    print(f"CUDA Available: {torch.cuda.is_available()}")
-    print(f"CUDA Cores: {torch.cuda.device_count()}")
-
-
-def restore_checkpoint(file, dir=args.checkpoint_dir):
-    checkpoint = torch.load(os.path.join(dir, file))
-    return checkpoint
-
-
 def main(args):
     if args.debug:
-        debug()
+        debug.packages()
     os.environ['OMP_NUM_THREADS'] = "1"
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     devices = ",".join([str(i) for i in range(torch.cuda.device_count())])

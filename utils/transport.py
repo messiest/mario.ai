@@ -14,3 +14,8 @@ def save_checkpoint(model, optimizer, args, n, dir='checkpoints'):
         ),
         os.path.join(dir, f"{args.env_name}_{args.model_id}_a3c_params.tar")
     )
+    return True
+
+def restore_checkpoint(file, dir='checkpoints'):
+    checkpoint = torch.load(os.path.join(dir, file))
+    return checkpoint
