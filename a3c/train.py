@@ -1,5 +1,6 @@
 import os
 import gc
+import time
 import random
 from collections import deque
 from itertools import count
@@ -171,7 +172,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
         optimizer.step()
         time.sleep(5.)
-        
+
         gc.collect()
 
 
