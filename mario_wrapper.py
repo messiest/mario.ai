@@ -9,12 +9,13 @@ from nes_py.wrappers import BinarySpaceToDiscreteSpaceEnv
 from torchvision import transforms
 
 
-def _process_frame(frame):
+def _process_frame(frame, shape=(84, 84)):
     tsfms = [
         transforms.ToPILImage(),
         transforms.Grayscale(),
-        transforms.Resize((84, 84)),
+        transforms.Resize(shape),
         transforms.ToTensor(),
+        transforms.Normalize([frame.mean()], [frame.std()]),
     ]
     process = transforms.Compose(tsfms)
     img = process(frame)
@@ -143,7 +144,7 @@ class NormalizedEnv(gym.ObservationWrapper):
 
 def wrap_mario(env):
     env = ProcessMarioFrame(env)
-    env = NormalizedEnv(env)
+    # env = NormalizedEnv(env)
     env = FrameBuffer(env)
     return env
 

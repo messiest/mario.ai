@@ -96,8 +96,6 @@ def test(rank, args, shared_model, counter, device):
             end='\r',
         )
 
-
-
         env.render()
         # done = done or episode_length >= args.max_episode_length
 
