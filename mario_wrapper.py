@@ -61,7 +61,6 @@ class ProcessMarioFrame(gym.Wrapper):
         if is_done:
             if info['flag_get']:
                 reward += 50
-
             else:
                 reward -= 50
 
@@ -112,7 +111,6 @@ class FrameBuffer(gym.Wrapper):
 
         frame = np.stack(self.buffer, axis=0)
         frame = np.reshape(frame, (4, 84, 84))
-
         return frame
 
 

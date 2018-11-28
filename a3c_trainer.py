@@ -56,9 +56,10 @@ def main(args):
     if args.debug:
         debug.packages()
     os.environ['OMP_NUM_THREADS'] = "1"
-    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    devices = ",".join([str(i) for i in range(torch.cuda.device_count())])
-    os.environ["CUDA_VISIBLE_DEVICES"] = devices
+    if torch.cuda.is_available():
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        devices = ",".join([str(i) for i in range(torch.cuda.device_count())])
+        os.environ["CUDA_VISIBLE_DEVICES"] = devices
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
     if args.record:

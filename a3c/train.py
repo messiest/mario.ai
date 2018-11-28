@@ -25,7 +25,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
     torch.manual_seed(args.seed + rank)
 
     text_color = FontColor.RED if select_sample else FontColor.GREEN
-    print(text_color + f"Process: {rank: 3d} | Sampling: {str(select_sample):5s} | DEVICE: {device}", FontColor.END)
+    print(text_color + f"Process: {rank: 3d} | {'Sampling' if select_sample else 'Decision'} | Device: {device.upper()}", FontColor.END)
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
     action_space = env.action_space.n

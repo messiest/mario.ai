@@ -10,6 +10,7 @@ import gym
 import torch
 import torch.nn.functional as F
 from xvfbwrapper import Xvfb
+from emoji import emojize
 
 from models import ActorCritic
 from mario_actions import ACTIONS
@@ -63,7 +64,7 @@ def test(rank, args, shared_model, counter, device):
         state, reward, done, info = env.step(action[0, 0])  # action.item()
 
         print(
-            f"|| World {info['world']}-{info['stage']} |[ {' + '.join(action_out):^13s} ]| ",
+            f"{emojize(':mushroom:')} World {info['world']}-{info['stage']} | {emojize(':video_game:')}: [ {' + '.join(action_out):^13s} ]| ",
             end='\r',
         )
 
@@ -107,8 +108,8 @@ def test(rank, args, shared_model, counter, device):
             t = time.time() - start_time
 
             print(
-                f"|| World {info['world']}-{info['stage']} |[ " + \
-                f"{' + '.join(action_out):^13s} ]| " + \
+                f"{emojize(':mushroom:')} World {info['world']}-{info['stage']} |" + \
+                f" {emojize(':video_game:')}: [ {' + '.join(action_out):^13s} ]| " + \
                 f"ID: {args.model_id}, " + \
                 f"Time: {time.strftime('%H:%M:%S', time.gmtime(t)):^9s}, " + \
                 f"FPS: {counter.value/t: 6.2f}, " + \
@@ -141,10 +142,10 @@ def test(rank, args, shared_model, counter, device):
                 writer = csv.writer(file)
                 writer.writerows([data])
 
-            time.sleep(10.)
             reward_sum = 0
             episode_length = 0
             actions.clear()
+            time.sleep(60.)
             state = env.reset()
 
 
