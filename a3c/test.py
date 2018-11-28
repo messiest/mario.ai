@@ -24,15 +24,42 @@ from a3c.utils import ensure_shared_grads, choose_action
 def test(rank, args, shared_model, counter, device):
     torch.manual_seed(args.seed + rank)
 
-    env = create_mario_env(args.env_name)
+    env = create_mario_env(args.env_name, ACTIONS[args.move_set])
     if args.record:
         env = gym.wrappers.Monitor(env, 'playback/', force=True)
     # env.seed(args.seed + rank)
+    observation_space = env.observation_space.shape[0]
+    action_space = env.action_space.n
 
-    model = ActorCritic(env.observation_space.shape[0], len(ACTIONS[args.move_set]))
+    model = ActorCritic(observation_space, action_space)
     if torch.cuda.is_available():
         model.cuda()
     model.eval()
+
+    save_file = os.getcwd() + f'/save/{args.env_name}_performance.csv'
+    if not os.path.exists(save_file):
+        headers = [
+            'environment',
+            'algorithm',
+            'id',
+            'time',
+            'steps',
+            'reward',
+            'episode_length',
+            'coins',
+            'flag_get',
+            'life',
+            'score',
+            'stage',
+            'status',
+            'time_remaining',
+            'world',
+            'x_pos',
+        ]
+
+        with open(save_file, 'a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(headers)
 
     state = env.reset()
     state = torch.from_numpy(state)
@@ -68,31 +95,7 @@ def test(rank, args, shared_model, counter, device):
             end='\r',
         )
 
-        save_file = os.getcwd() + f'/save/{args.env_name}_performance.csv'
 
-        if not os.path.exists(save_file):
-            headers = [
-                'environment',
-                'algorithm',
-                'id',
-                'time',
-                'steps',
-                'reward',
-                'episode_length',
-                'coins',
-                'flag_get',
-                'life',
-                'score',
-                'stage',
-                'status',
-                'time_remaining',
-                'world',
-                'x_pos',
-            ]
-
-            with open(save_file, 'a', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow(headers)
 
         env.render()
         done = done or episode_length >= args.max_episode_length

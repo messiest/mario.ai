@@ -25,14 +25,15 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
     torch.manual_seed(args.seed + rank)
 
     text_color = FontColor.RED if select_sample else FontColor.GREEN
-    print(text_color + f"Process: {rank: 3d} | {'Sampling' if select_sample else 'Decision'} | Device: {device.upper()}", FontColor.END)
+    print(text_color + f"Process: {rank: 3d} | {'Sampling' if select_sample else 'Decision'} | Device: {str(device).upper()}", FontColor.END)
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
+    observation_space = env.observation_space.shape[0]
     action_space = env.action_space.n
 
     # env.seed(args.seed + rank)
 
-    model = ActorCritic(env.observation_space.shape[0], action_space)
+    model = ActorCritic(observation_space, action_space)
     if torch.cuda.is_available():
         model = model.cuda()
         model.device = device
@@ -158,7 +159,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         ensure_shared_grads(model, shared_model)
 
         optimizer.step()
-        time.sleep(5.)
 
         gc.collect()
 
