@@ -86,8 +86,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
                 reason = 'choice'
 
             if torch.cuda.is_available():
-                # action = action.cuda(device)
-                # value = value.cuda(device)
                 action = action.cuda()
                 value = value.cuda()
 

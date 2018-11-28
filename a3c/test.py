@@ -141,11 +141,12 @@ def test(rank, args, shared_model, counter, device):
                 writer = csv.writer(file)
                 writer.writerows([data])
 
+            time.sleep(10.)
             reward_sum = 0
             episode_length = 0
             actions.clear()
             state = env.reset()
-            time.sleep(60.)
+
 
         state = torch.from_numpy(state)
 
