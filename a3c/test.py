@@ -108,13 +108,12 @@ def test(rank, args, shared_model, counter, device):
             t = time.time() - start_time
 
             print(
-                f"|| {args.env_name} |[ " + \
+                f"| {args.env_name} |[ " + \
                 f"{' + '.join(action_out):^13s} ]| " + \
                 f"ID: {args.model_id}, " + \
                 f"Time: {time.strftime('%H:%M:%S', time.gmtime(t)):^9s}, " + \
                 f"FPS: {counter.value/t: 6.2f}, " + \
                 f"Reward: {reward_sum: 10.2f}, " + \
-                f"Episode Length: {episode_length: 7d}, " + \
                 f"Progress: {(info['x_pos'] / 3225) * 100: 3.2f}%",
                 end='\r',
                 flush=True,
