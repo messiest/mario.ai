@@ -60,10 +60,10 @@ class ProcessMarioFrame(gym.Wrapper):
 
         if is_done:
             if info['flag_get']:
-                reward += 20
+                reward += 50
 
             else:
-                reward -= 20
+                reward -= 50
 
         return _process_frame(obs), reward, is_done, info
 
