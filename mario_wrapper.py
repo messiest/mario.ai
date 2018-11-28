@@ -1,7 +1,6 @@
 from collections import deque
 
 import numpy as np
-import cv2
 import gym
 from gym.spaces.box import Box
 import gym_super_mario_bros
