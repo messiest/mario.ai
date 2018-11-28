@@ -11,13 +11,13 @@ from torchvision import transforms
 
 
 def _process_frame(frame):
-    tsfm = [
+    tsfms = [
         transforms.ToPILImage(),
         transforms.Grayscale(),
         transforms.Resize((84, 84)),
         transforms.ToTensor(),
     ]
-    process = transforms.Compose(tsfm)
+    process = transforms.Compose(tsfms)
     img = process(frame)
 
     return img
@@ -40,6 +40,7 @@ class ProcessMarioFrame(gym.Wrapper):
     def step(self, action):
         obs, _, is_done, info = self.env.step(action)
 
+        # custom reward
         reward = min(max((info['x_pos'] - self.prev_dist), 0), 2)
         self.prev_dist = info['x_pos']
 
@@ -51,9 +52,9 @@ class ProcessMarioFrame(gym.Wrapper):
             'tall': 2,
             'fireball': 3,
         }
-
-        reward += (statuses[info['status']] - self.prev_stat) * 5
-        self.prev_stat = statuses[info['status']]
+        status = info['status']
+        reward += (statuses[status] - self.prev_stat) * 5
+        self.prev_stat = statuses[status]
 
         reward += (info['score'] - self.prev_score) * 2.5
         self.prev_score = info['score']

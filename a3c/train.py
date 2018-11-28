@@ -28,9 +28,11 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
     print(text_color + f"Process: {rank: 3d} | Sampling: {str(select_sample):5s} | DEVICE: {device}", FontColor.END)
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
+    action_space = env.action_space.n
+
     # env.seed(args.seed + rank)
 
-    model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
+    model = ActorCritic(env.observation_space.shape[0], action_space)
     if torch.cuda.is_available():
         model = model.cuda()
         model.device = device
@@ -76,7 +78,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             reason = ''
             epsilon = get_epsilon(step)
             if select_sample:
-                action = torch.randint(0, env.action_space.n, (1,1))  #.detach()
+                action = torch.randint(0, action_space, (1,1))  #.detach()
                 reason = 'random'
             else:
                 action = choose_action(model, state, hx, cx)
@@ -95,10 +97,10 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
             state, reward, done, info = env.step(action.item())
             done = done or episode_length >= args.max_episode_length
-            reward = max(min(reward, 15), -15)  # as per gym-super-mario-bros
+            reward = max(min(reward, 50), -50)  # h/t @ArvindSoma
 
             with lock:
-                counter.value += 1  # episodes?
+                counter.value += 1
 
             if done:
                 episode_length = 0
@@ -116,10 +118,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         if not done:
             value, _, _ = model((state.unsqueeze(0), (hx, cx)))
             R = value.detach()
-            # R = value.item()
 
         if torch.cuda.is_available():
-            # R = R.cuda(device)
             R = R.cuda()
 
         values.append(R)
@@ -130,16 +130,11 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         for i in reversed(range(len(rewards))):
 
             if torch.cuda.is_available():
-                # gae = gae.cuda(device)
                 gae = gae.cuda()
 
             R = args.gamma * R + rewards[i]
             if torch.cuda.is_available():
-                # R = R.cuda(device)
                 R = R.cuda()
-
-            # print('R', type(R), R.is_cuda)
-            # print('values[i]', type(values[i]), values[i].is_cuda)
 
             advantage = R - values[i]
             value_loss = value_loss + 0.5 * advantage.pow(2)
@@ -147,15 +142,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             # Generalized Advantage Estimation
             delta_t = rewards[i] + args.gamma * values[i + 1] - values[i]
             if torch.cuda.is_available():
-                # delta_t = delta_t.cuda(device)
                 delta_t = delta_t.cuda()
 
-            # print("gae", type(gae), gae.is_cuda)
-            # print("delta_t", type(delta_t), delta_t.is_cuda)
-            # assert gae.is_cuda == delta_t.is_cuda, "CUDA mismatch!"
-
             if torch.cuda.is_available():
-                # gae = gae.cuda(device) * args.gamma * args.tau + delta_t.cuda(device)
                 gae = gae.cuda() * args.gamma * args.tau + delta_t.cuda()
             else:
                 gae = gae.cpu() * args.gamma * args.tau + delta_t.cpu()

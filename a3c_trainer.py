@@ -19,7 +19,7 @@ from mario_actions import ACTIONS
 # Command Line Interface
 parser = argparse.ArgumentParser(description='A3C')
 parser.add_argument('--lr', type=float, default=0.0001, help='learning rate (default: 0.0001)')
-parser.add_argument('--gamma', type=float, default=0.99, help='discount factor for rewards (default: 0.99)')
+parser.add_argument('--gamma', type=float, default=0.9, help='discount factor for rewards (default: 0.9)')
 parser.add_argument('--tau', type=float, default=1.00, help='parameter for GAE (default: 1.00)')
 parser.add_argument('--entropy-coef', type=float, default=0.01, help='entropy term coefficient (default: 0.01)')
 parser.add_argument('--value-loss-coef', type=float, default=0.5, help='value loss coefficient (default: 0.5)')
@@ -134,7 +134,7 @@ def main(args):
             )
         p.start()
         processes.append(p)
-        time.sleep(1.)
+        time.sleep(.5)
 
     # Queue test process
     p = mp.Process(
@@ -155,6 +155,15 @@ def main(args):
     #
     #     print("Training halted")
 
+    print("DONE")
 
 if __name__ == "__main__":
-    _ = main(args)
+    try:
+        if not os.getenv('DISPLAY'):
+            print('Running Headless')
+            vdisplay = Xvfb()
+            vdisplay.start()
+        _ = main(args)
+    except KeyboardInterrupt:
+        if not os.getenv('DISPLAY'):
+            vdisplay.stop()
