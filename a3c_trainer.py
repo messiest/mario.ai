@@ -140,6 +140,7 @@ def main(args):
                 args=(rank, args, shared_model, counter, lock, optimizer, device, False),
             )
         p.start()
+        time.sleep(0.1)
         processes.append(p)
 
     for p in processes:
