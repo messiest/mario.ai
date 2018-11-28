@@ -107,6 +107,14 @@ def main(args):
     counter = mp.Value('i', args.start_step)
     lock = mp.Lock()
 
+    # Queue test process
+    p = mp.Process(
+        target=test,
+        args=(args.num_processes, args, shared_model, counter, 0)
+    )
+
+    p.start()
+    processes.append(p)
 
     # Queue training processes
     num_processes = args.num_processes
@@ -115,15 +123,13 @@ def main(args):
     if args.num_processes > 1:
         num_processes = args.num_processes - 1
 
-    sample_val = num_processes - no_sample
+    samplers = num_processes - no_sample
 
     for rank in range(0, num_processes):
         device = 'cpu'
         if torch.cuda.is_available():
-            # device = f"cuda:{rank % torch.cuda.device_count()}"
-            # device = rank % torch.cuda.device_count()
-            device = 0
-        if rank < sample_val:  # random action
+            device = 0  # TODO: Need to move to distributed to handle multigpu
+        if rank < samplers:  # random action
             p = mp.Process(
                 target=train,
                 args=(rank, args, shared_model, counter, lock, optimizer, device),
@@ -135,28 +141,10 @@ def main(args):
             )
         p.start()
         processes.append(p)
-        time.sleep(.5)
-
-    # Queue test process
-    p = mp.Process(
-        target=test,
-        args=(args.num_processes, args, shared_model, counter, 0)
-    )
-
-    p.start()
-    processes.append(p)
 
     for p in processes:
         p.join()
 
-    # TODO: Find way to exit mp gracefully
-    # except KeyboardInterrupt:
-    #     for p in processes:
-    #         p.close()
-    #
-    #     print("Training halted")
-
-    print("DONE")
 
 if __name__ == "__main__":
     try:
@@ -168,3 +156,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         if not os.getenv('DISPLAY'):
             vdisplay.stop()
+    finally:
+        print("Done.")

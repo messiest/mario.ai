@@ -31,7 +31,6 @@ def test(rank, args, shared_model, counter, device):
     model = ActorCritic(env.observation_space.shape[0], len(ACTIONS[args.move_set]))
     if torch.cuda.is_available():
         model.cuda()
-        # model.cuda(device)
     model.eval()
 
     state = env.reset()
@@ -61,12 +60,12 @@ def test(rank, args, shared_model, counter, device):
 
         action_out = ACTIONS[args.move_set][action[0, 0]]
 
+        state, reward, done, info = env.step(action[0, 0])  # action.item()
+
         print(
-            f"|| {args.env_name} |[ {' + '.join(action_out):^13s} ]| ",
+            f"| World {info['world']}-{info['stage']} |[ {' + '.join(action_out):^13s} ]| ",
             end='\r',
         )
-
-        state, reward, done, info = env.step(action[0, 0])  # action.item()
 
         save_file = os.getcwd() + f'/save/{args.env_name}_performance.csv'
 
@@ -108,7 +107,7 @@ def test(rank, args, shared_model, counter, device):
             t = time.time() - start_time
 
             print(
-                f"| {args.env_name} |[ " + \
+                f"| World {info['world']}-{info['stage']} |[ " + \
                 f"{' + '.join(action_out):^13s} ]| " + \
                 f"ID: {args.model_id}, " + \
                 f"Time: {time.strftime('%H:%M:%S', time.gmtime(t)):^9s}, " + \
