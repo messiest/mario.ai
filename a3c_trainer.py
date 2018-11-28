@@ -7,6 +7,7 @@ import gym
 import torch
 import torch.multiprocessing as _mp
 import torchvision
+from xvfbwrapper import Xvfb
 
 from models import ActorCritic
 from optimizers import SharedAdam
