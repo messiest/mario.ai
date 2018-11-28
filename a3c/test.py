@@ -63,7 +63,7 @@ def test(rank, args, shared_model, counter, device):
         state, reward, done, info = env.step(action[0, 0])  # action.item()
 
         print(
-            f"| World {info['world']}-{info['stage']} |[ {' + '.join(action_out):^13s} ]| ",
+            f"|| World {info['world']}-{info['stage']} |[ {' + '.join(action_out):^13s} ]| ",
             end='\r',
         )
 
@@ -107,7 +107,7 @@ def test(rank, args, shared_model, counter, device):
             t = time.time() - start_time
 
             print(
-                f"| World {info['world']}-{info['stage']} |[ " + \
+                f"|| World {info['world']}-{info['stage']} |[ " + \
                 f"{' + '.join(action_out):^13s} ]| " + \
                 f"ID: {args.model_id}, " + \
                 f"Time: {time.strftime('%H:%M:%S', time.gmtime(t)):^9s}, " + \
