@@ -27,6 +27,7 @@ def test(rank, args, shared_model, counter, device):
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
     if args.record:
         env = gym.wrappers.Monitor(env, 'playback/', force=True)
+
     # env.seed(args.seed + rank)
     observation_space = env.observation_space.shape[0]
     action_space = env.action_space.n
@@ -98,14 +99,14 @@ def test(rank, args, shared_model, counter, device):
 
 
         env.render()
-        done = done or episode_length >= args.max_episode_length
+        # done = done or episode_length >= args.max_episode_length
 
         reward_sum += reward
 
         actions.append(action[0, 0])
 
-        if actions.count(actions[0]) >= actions.maxlen:
-            done = True
+        # if actions.count(actions[0]) >= actions.maxlen:
+        #     done = True
 
         if done:
             t = time.time() - start_time
