@@ -92,7 +92,7 @@ def test(rank, args, shared_model, counter, device):
         state, reward, done, info = env.step(action[0, 0])  # action.item()
 
         print(
-            f"{emojize(':mushroom:')} World {info['world']}-{info['stage']} | {emojize(':video_game:')}: [ {' + '.join(action_out):^13s} ]| ",
+            f"{emojize(':mushroom:')} World {info['world']}-{info['stage']} | {emojize(':video_game:')}: [ {' + '.join(action_out):^13s} ] | ",
             end='\r',
         )
 
@@ -111,7 +111,7 @@ def test(rank, args, shared_model, counter, device):
 
             print(
                 f"{emojize(':mushroom:')} World {info['world']}-{info['stage']} |" + \
-                f" {emojize(':video_game:')}: [ {' + '.join(action_out):^13s} ]| " + \
+                f" {emojize(':video_game:')}: [ {' + '.join(action_out):^13s} ] | " + \
                 f"ID: {args.model_id}, " + \
                 f"Time: {time.strftime('%H:%M:%S', time.gmtime(t)):^9s}, " + \
                 f"FPS: {counter.value/t: 6.2f}, " + \

@@ -79,11 +79,13 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             reason = ''
             epsilon = get_epsilon(step)
             if select_sample:
-                action = torch.randint(0, action_space, (1,1))  #.detach()
+                # action = torch.randint(0, action_space, (1,1))  #.detach()
+                action = prob.multinomial(1)  # [1]
                 reason = 'random'
             else:
-                action = choose_action(model, state, hx, cx)
-                model.train()  # may be redundant
+                # action = choose_action(model, state, hx, cx)
+                # model.train()  # may be redundant
+                action = prob.max(-1, keepdim=True)[1]
                 reason = 'choice'
 
             if torch.cuda.is_available():
