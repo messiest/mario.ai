@@ -88,7 +88,7 @@ class FrameBuffer(gym.Wrapper):
     def __init__(self, env=None, skip=4, shape=(84, 84)):
         super(FrameBuffer, self).__init__(env)
         self.counter = 0
-        self.observation_space = Box(low=1, high=255, shape=(4, 84, 84), dtype=np.uint8)
+        self.observation_space = Box(low=0, high=255, shape=(4, 84, 84), dtype=np.uint8)
         self.skip = skip
         self.buffer = deque(maxlen=self.skip)
 
