@@ -9,8 +9,6 @@ from nes_py.wrappers import BinarySpaceToDiscreteSpaceEnv
 import torch
 from torchvision import transforms
 
-import cv2
-
 
 def _process_frame(frame, shape=(84, 84)):
     if frame is not None:
