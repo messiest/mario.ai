@@ -1,5 +1,4 @@
 import os
-import gc
 import csv
 import time
 import random
@@ -9,7 +8,6 @@ from itertools import count
 import gym
 import torch
 import torch.nn.functional as F
-from xvfbwrapper import Xvfb
 from emoji import emojize
 
 from models import ActorCritic
@@ -78,14 +76,14 @@ def test(rank, args, shared_model, counter, device):
             hx = torch.zeros(1, 512)
 
         else:
-            cx = cx.detach()
-            hx = hx.detach()
+            cx = cx.data
+            hx = hx.data
 
         with torch.no_grad():
             value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
         prob = F.softmax(logit, dim=-1)
-        action = prob.max(1, keepdim=True)[1].cpu().numpy()
+        action = prob.max(-1, keepdim=True)[1].data.numpy()  #  .cpu().numpy()
 
         action_out = ACTIONS[args.move_set][action[0, 0]]
 
@@ -149,7 +147,6 @@ def test(rank, args, shared_model, counter, device):
             actions.clear()
             time.sleep(60.)
             state = env.reset()
-
 
         state = torch.from_numpy(state)
 

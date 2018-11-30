@@ -6,21 +6,29 @@ from gym.spaces.box import Box
 import gym_super_mario_bros
 from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
 from nes_py.wrappers import BinarySpaceToDiscreteSpaceEnv
+import torch
 from torchvision import transforms
+
+import cv2
 
 
 def _process_frame(frame, shape=(84, 84)):
-    tsfms = [
-        transforms.ToPILImage(),
-        transforms.Grayscale(),
-        transforms.Resize(shape),
-        transforms.ToTensor(),
-        transforms.Normalize([frame.mean()], [frame.std()]),
-    ]
-    process = transforms.Compose(tsfms)
-    img = process(frame)
+    if frame is not None:
+        # frame = frame[:, :, 0] * 0.299 \
+        #         + frame[:, :, 1] * 0.587 \
+        #         + frame[:, :, 2] * 0.114
+        tsfms = [
+            transforms.ToPILImage(),
+            transforms.Grayscale(),
+            transforms.Resize(shape),
+            transforms.ToTensor(),
+        ]
+        process = transforms.Compose(tsfms)
+        frame_t = process(frame)
+    else:
+        frame_t = torch.zeros((1, 84, 84))
 
-    return img
+    return frame_t
 
 
 class ProcessMarioFrame(gym.Wrapper):
@@ -30,12 +38,12 @@ class ProcessMarioFrame(gym.Wrapper):
             low=0,
             high=255,
             shape=(1, 84, 84),
-            dtype=np.uint8
+            dtype=np.uint8,
         )
         self.prev_time = 400
         self.prev_stat = 0
         self.prev_score = 0
-        self.prev_dist = 40
+        self.prev_dist = 40  # starting position
 
     def step(self, action):
         obs, _, is_done, info = self.env.step(action)
@@ -56,7 +64,7 @@ class ProcessMarioFrame(gym.Wrapper):
         reward += (statuses[status] - self.prev_stat) * 5
         self.prev_stat = statuses[status]
 
-        reward += (info['score'] - self.prev_score) * 2.5
+        reward += (info['score'] - self.prev_score) * 0.025
         self.prev_score = info['score']
 
         if is_done:
@@ -112,6 +120,7 @@ class FrameBuffer(gym.Wrapper):
 
         frame = np.stack(self.buffer, axis=0)
         frame = np.reshape(frame, (4, 84, 84))
+
         return frame
 
 
@@ -120,21 +129,17 @@ class NormalizedEnv(gym.ObservationWrapper):
         super(NormalizedEnv, self).__init__(env)
         self.state_mean = 0
         self.state_std = 0
-        self.alpha = 0.999
+        self.alpha = 0.9999
         self.num_steps = 0
 
     def observation(self, obs):
         if obs is not None:
             self.num_steps += 1
-            self.state_mean = self.state_mean * self.alpha + \
-                obs.mean() * (1 - self.alpha)
-            self.state_std = self.state_std * self.alpha + \
-                obs.std() * (1 - self.alpha)
+            self.state_mean = self.state_mean * self.alpha + obs.mean() * (1 - self.alpha)
+            self.state_std = self.state_std * self.alpha + obs.std() * (1 - self.alpha)
 
-            unbiased_mean = self.state_mean / \
-                (1 - pow(self.alpha, self.num_steps))
-            unbiased_std = self.state_std / \
-                (1 - pow(self.alpha, self.num_steps))
+            unbiased_mean = self.state_mean / (1 - pow(self.alpha, self.num_steps))
+            unbiased_std = self.state_std / (1 - pow(self.alpha, self.num_steps))
 
             return (obs - unbiased_mean) / (unbiased_std + 1e-8)
 
@@ -144,7 +149,7 @@ class NormalizedEnv(gym.ObservationWrapper):
 
 def wrap_mario(env):
     env = ProcessMarioFrame(env)
-    # env = NormalizedEnv(env)
+    env = NormalizedEnv(env)
     env = FrameBuffer(env)
     return env
 

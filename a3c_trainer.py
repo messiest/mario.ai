@@ -25,7 +25,7 @@ parser.add_argument('--tau', type=float, default=1.00, help='parameter for GAE (
 parser.add_argument('--entropy-coef', type=float, default=0.01, help='entropy term coefficient (default: 0.01)')
 parser.add_argument('--value-loss-coef', type=float, default=0.5, help='value loss coefficient (default: 0.5)')
 parser.add_argument('--max-grad-norm', type=float, default=250, help='value loss coefficient (default: 250)')
-parser.add_argument('--seed', type=int, default=4, help='random seed (default: 4)')
+parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
 parser.add_argument('--num-processes', type=int, default=_mp.cpu_count(), help='how many training processes to use (default: 4)')
 parser.add_argument('--num-steps', type=int, default=50, help='number of forward steps in A3C (default: 50)')
 parser.add_argument('--max-episode-length', type=int, default=1000000, help='maximum length of an episode (default: 1000000)')
@@ -33,7 +33,7 @@ parser.add_argument('--env-name', default='SuperMarioBrosNoFrameskip-v0', help='
 parser.add_argument('--no-shared', default=False, help='use an optimizer without shared momentum.')
 parser.add_argument('--use-cuda', default=True, help='run on gpu.')
 parser.add_argument('--record', action='store_true', help='record playback of tests')
-parser.add_argument('--save-interval', type=int, default=100, help='model save interval (default: 100)')
+parser.add_argument('--save-interval', type=int, default=10, help='model save interval (default: 10)')
 parser.add_argument('--non-sample', type=int, default=int(_mp.cpu_count() / 2), help='number of non sampling processes (default: 2)')
 parser.add_argument('--checkpoint-dir', type=str, default='checkpoints', help='directory to save checkpoints')
 parser.add_argument('--start-step', type=int, default=0, help='training step on which to start')
@@ -62,7 +62,9 @@ def main(args):
         os.environ["CUDA_VISIBLE_DEVICES"] = devices
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
+
     shared_model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
+
     if torch.cuda.is_available():
         shared_model = shared_model.cuda()
 
@@ -71,7 +73,7 @@ def main(args):
     optimizer = SharedAdam(shared_model.parameters(), lr=args.lr)
     optimizer.share_memory()
 
-    if args.load_model:
+    if args.load_model:  # TODO Load model before initializing optimizer
         checkpoint_file = f"{args.env_name}_{args.model_id}_a3c_params.tar"
         checkpoint = restore_checkpoint(checkpoint_file)
         assert args.env_name == checkpoint['env'], \
@@ -102,7 +104,7 @@ def main(args):
 
     processes = []
 
-    counter = mp.Value('i', args.start_step)
+    counter = mp.Value('i', 0)
     lock = mp.Lock()
 
     # Queue test process

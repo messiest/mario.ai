@@ -1,7 +1,7 @@
 import os
-import gc
 import time
 import random
+import logging
 from collections import deque
 from itertools import count
 
@@ -16,9 +16,12 @@ from models import ActorCritic
 from mario_actions import ACTIONS
 from mario_wrapper import create_mario_env
 from optimizers import SharedAdam
-from utils import get_epsilon, FontColor, save_checkpoint
+from utils import FontColor, save_checkpoint
 
-from a3c.utils import ensure_shared_grads, choose_action
+from a3c.utils import ensure_shared_grads, choose_action, gae
+
+
+LOG_FILE = 'logs/info.log'
 
 
 def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu', select_sample=True):
@@ -48,7 +51,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
     done = True
 
     episode_length = 0
-    for t in count(start=counter.value):
+    for t in count():  # start=counter.value
         if t % args.save_interval == 0 and t > 0:  # and rank == 1:
             save_checkpoint(shared_model, optimizer, args, counter.value)
 
@@ -73,18 +76,15 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
             prob = F.softmax(logit, dim=-1)
             log_prob = F.log_softmax(logit, dim=-1)
-            entropy = -(log_prob * prob).sum(1, keepdim=True)
+            entropy = -(log_prob * prob).sum(-1, keepdim=True)
             entropies.append(entropy)
 
             reason = ''
-            epsilon = get_epsilon(step)
+
             if select_sample:
-                # action = torch.randint(0, action_space, (1,1))  #.detach()
-                action = prob.multinomial(1)  # [1]
+                action = prob.multinomial(1)
                 reason = 'random'
             else:
-                # action = choose_action(model, state, hx, cx)
-                # model.train()  # may be redundant
                 action = prob.max(-1, keepdim=True)[1]
                 reason = 'choice'
 
@@ -92,11 +92,20 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
                 action = action.cuda()
                 value = value.cuda()
 
-            log_prob = log_prob.gather(1, action)
+            log_prob = log_prob.gather(-1, action)
 
             action_out = ACTIONS[args.move_set][action.item()]
 
             state, reward, done, info = env.step(action.item())
+
+            info_log = {}
+            info_log.update(info)
+            info_log.update(vars(args))
+            if not os.path.exists(LOG_FILE):
+                logging.basicConfig(filename=LOG_FILE, format='%(asctime)s, %(message)s', level=logging.DEBUG)
+                logging.info(list(info_log.keys()))
+            logging.info(list(info_log.values()))
+
             done = done or episode_length >= args.max_episode_length
             reward = max(min(reward, 50), -50)  # h/t @ArvindSoma
 
@@ -118,52 +127,22 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         R = torch.zeros(1, 1)
         if not done:
             value, _, _ = model((state.unsqueeze(0), (hx, cx)))
-            R = value.detach()
-
-        if torch.cuda.is_available():
-            R = R.cuda()
+            R = value.data
 
         values.append(R)
-        policy_loss = 0
-        value_loss = 0
-
-        gae = torch.zeros(1, 1)
-        for i in reversed(range(len(rewards))):
-
-            if torch.cuda.is_available():
-                gae = gae.cuda()
-
-            R = args.gamma * R + rewards[i]
-            if torch.cuda.is_available():
-                R = R.cuda()
-
-            advantage = R - values[i]
-            value_loss = value_loss + 0.5 * advantage.pow(2)
-
-            # Generalized Advantage Estimation
-            delta_t = rewards[i] + args.gamma * values[i + 1] - values[i]
-            if torch.cuda.is_available():
-                delta_t = delta_t.cuda()
-
-            if torch.cuda.is_available():
-                gae = gae.cuda() * args.gamma * args.tau + delta_t.cuda()
-            else:
-                gae = gae.cpu() * args.gamma * args.tau + delta_t.cpu()
-
-            policy_loss = policy_loss - \
-                          log_probs[i] * gae - \
-                          args.entropy_coef * entropies[i]
 
         optimizer.zero_grad()
-        (policy_loss + args.value_loss_coef * value_loss).backward()
+        loss = gae(R, rewards, values, log_probs, entropies, args)
+        # print(f"PROCESS {rank} loss: {loss.data}")
+        (loss).backward()
         nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+
+        # if torch.cuda.is_available():
+        #     _ = torch.cuda.synchronize()
 
         ensure_shared_grads(model, shared_model)
 
         optimizer.step()
-
-        gc.collect()
-
 
 if __name__ == "__main__":
     pass
