@@ -2,6 +2,7 @@ import os
 import csv
 import time
 import random
+import logging
 from collections import deque
 from itertools import count
 
@@ -17,6 +18,9 @@ from optimizers import SharedAdam
 from utils import get_epsilon, FontColor, save_checkpoint
 
 from a3c.utils import ensure_shared_grads, choose_action
+
+
+logging.basicConfig(filename='logs/info.log', format='%(asctime)s, %(message)s', level=logging.DEBUG)
 
 
 def test(rank, args, shared_model, counter, device):
@@ -35,8 +39,7 @@ def test(rank, args, shared_model, counter, device):
         model.cuda()
     model.eval()
 
-    save_file = os.getcwd() + f'/save/{args.env_name}_performance.csv'
-    if not os.path.exists(save_file):
+    if not os.path.exists(args.save_file):
         headers = [
             'environment',
             'algorithm',
@@ -45,18 +48,9 @@ def test(rank, args, shared_model, counter, device):
             'steps',
             'reward',
             'episode_length',
-            'coins',
-            'flag_get',
-            'life',
-            'score',
-            'stage',
-            'status',
-            'time_remaining',
-            'world',
-            'x_pos',
         ]
 
-        with open(save_file, 'a', newline='') as file:
+        with open(args.save_file, 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(headers)
 
@@ -85,24 +79,24 @@ def test(rank, args, shared_model, counter, device):
         prob = F.softmax(logit, dim=-1)
         action = prob.max(-1, keepdim=True)[1].data.numpy()  #  .cpu().numpy()
 
-        action_out = ACTIONS[args.move_set][action[0, 0]]
+        action_out = ACTIONS[args.move_set][action.item()]
 
         state, reward, done, info = env.step(action[0, 0])  # action.item()
+
+        reward_sum += reward
 
         print(
             f"{emojize(':mushroom:')} World {info['world']}-{info['stage']} | {emojize(':video_game:')}: [ {' + '.join(action_out):^13s} ] | ",
             end='\r',
         )
 
-        env.render()
-        # done = done or episode_length >= args.max_episode_length
+        info_log = {'id': args.model_id, 'action': action_out, 'reward': reward_sum}
+        info_log.update(info)
+        logging.info(info_log)
 
-        reward_sum += reward
+        env.render()
 
         actions.append(action[0, 0])
-
-        # if actions.count(actions[0]) >= actions.maxlen:
-        #     done = True
 
         if done:
             t = time.time() - start_time
@@ -127,18 +121,9 @@ def test(rank, args, shared_model, counter, device):
                 counter.value,  # Total Steps
                 reward_sum,  # Cummulative Reward
                 episode_length,  # Episode Step Length
-                info['coins'],  # Coins Collected
-                info['flag_get'],  # Got Flag
-                info['life'],  # Remaining Lives
-                info['score'],  # Score
-                info['stage'],  # Stage Number
-                info['status'],  # small, super
-                info['time'],  # Remaining Time
-                info['world'],  # World Number
-                info['x_pos'],  # X Distance
             ]
 
-            with open(save_file, 'a', newline='') as file:
+            with open(args.save_file, 'a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerows([data])
 

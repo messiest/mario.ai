@@ -46,6 +46,7 @@ parser.add_argument('--move-set', default='complex', type=str, help='the set of 
 parser.add_argument('--algorithm', default='A3C', type=str, help='algorithm being used')
 parser.add_argument('--headless', action='store_true', help='use virtual frame buffer')
 parser.add_argument('--reset-delay', type=int, default=60, help='delay between evaluations')
+parser.add_argument('--save-file', type=str, default='save/results.csv', help='file to save results to')
 
 args = parser.parse_args()
 

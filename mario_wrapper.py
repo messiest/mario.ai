@@ -1,5 +1,4 @@
 import os
-import logging
 from collections import deque
 
 import numpy as np
@@ -11,13 +10,9 @@ from nes_py.wrappers import BinarySpaceToDiscreteSpaceEnv
 import torch
 from torchvision import transforms
 
-LOG_FILE = 'logs/rewards.log'
 
 def _process_frame(frame, shape=(84, 84)):
     if frame is not None:
-        # frame = frame[:, :, 0] * 0.299 \
-        #         + frame[:, :, 1] * 0.587 \
-        #         + frame[:, :, 2] * 0.114
         tsfms = [
             transforms.ToPILImage(),
             transforms.Grayscale(),
@@ -48,9 +43,6 @@ class ProcessMarioFrame(gym.Wrapper):
 
     def step(self, action):
         obs, _, is_done, info = self.env.step(action)  # custom reward calculated below
-
-        if not os.path.exists(LOG_FILE):
-            logging.basicConfig(filename=LOG_FILE, format='%(asctime)s, %(message)s', level=logging.DEBUG)
 
         # custom reward
         dist = min(max((info['x_pos'] - self.prev_dist), 0), 2)

@@ -22,9 +22,6 @@ from a3c.utils import ensure_shared_grads, choose_action
 from a3c.loss import gae
 
 
-LOG_FILE = 'logs/info.log'
-
-
 def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu', select_sample=True):
     torch.manual_seed(args.seed + rank)
 
@@ -52,7 +49,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
     done = True
 
     episode_length = 0
-    for t in count():  # start=counter.value
+    for t in count():
         if t % args.save_interval == 0 and t > 0:  # and rank == 1:
             save_checkpoint(shared_model, optimizer, args, counter.value)
 
@@ -99,12 +96,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
             state, reward, done, info = env.step(action.item())
 
-            info_log = {'id': args.model_id, 'rank': rank}
-            info_log.update(info)
-            if not os.path.exists(LOG_FILE):
-                logging.basicConfig(filename=LOG_FILE, format='%(asctime)s, %(message)s', level=logging.DEBUG)
-            logging.info(info_log)
-
             done = done or episode_length >= args.max_episode_length
             reward = max(min(reward, 50), -50)  # h/t @ArvindSoma
 
@@ -134,9 +125,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         loss = gae(R, rewards, values, log_probs, entropies, args)
         (loss).backward()
         nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
-
-        # if torch.cuda.is_available():
-        #     _ = torch.cuda.synchronize()
 
         ensure_shared_grads(model, shared_model)
 
