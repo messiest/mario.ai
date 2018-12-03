@@ -47,17 +47,15 @@ class ProcessMarioFrame(gym.Wrapper):
         self.prev_dist = 40  # starting position
 
     def step(self, action):
-        obs, _, is_done, info = self.env.step(action)
+        obs, _, is_done, info = self.env.step(action)  # custom reward calculated below
 
         if not os.path.exists(LOG_FILE):
             logging.basicConfig(filename=LOG_FILE, format='%(asctime)s, %(message)s', level=logging.DEBUG)
 
         # custom reward
-        # reward = min(max((info['x_pos'] - self.prev_dist), 0), 2)
         dist = min(max((info['x_pos'] - self.prev_dist), 0), 2)
         self.prev_dist = info['x_pos'] + 1
 
-        # reward += (self.prev_time - info['time']) * -0.1
         time = (self.prev_time - info['time']) * -0.1
         self.prev_time = info['time']
 
@@ -67,26 +65,20 @@ class ProcessMarioFrame(gym.Wrapper):
             'fireball': 3,
         }
         status = info['status']
-        # reward += (statuses[status] - self.prev_stat) * 5
         stat = (statuses[status] - self.prev_stat) * 5
         self.prev_stat = statuses[status]
 
-        # reward += (info['score'] - self.prev_score) * 0.025
         score = (info['score'] - self.prev_score) * 0.025
         self.prev_score = info['score']
 
         flag = 0
         if is_done:
             if info['flag_get']:
-                # reward += 50
                 flag = 50
             else:
-                # reward -= 50
                 flag = -50
 
         reward = dist + time + stat + score + flag
-
-        # logging.info(f"{dist}, {time}, {stat}, {score}, {flag}")
 
         return _process_frame(obs), reward, is_done, info
 

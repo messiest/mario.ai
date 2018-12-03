@@ -8,7 +8,7 @@ Reinforcement Learning in Super Mario Bros.
 - [`gym-super-mario-bros`](https://github.com/Kautenja/gym-super-mario-bros/), [@Kautenja](https://github.com/Kautenja/)
 - [`pytorch-a3c`](https://github.com/ikostrikov/pytorch-a3c), [@ikostrikov](https://github.com/ikostrikov/)
 
-
+![Latex](https://latex.codecogs.com/png.latex?%5Clarge%20%5CLaTeX) via CodeCogs ![EqnEditor](https://www.codecogs.com/latex/eqneditor.php)
 
 
 ## Asynchronous Advantage Actor Critic (A3C)

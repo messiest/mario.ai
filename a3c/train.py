@@ -18,7 +18,8 @@ from mario_wrapper import create_mario_env
 from optimizers import SharedAdam
 from utils import FontColor, save_checkpoint
 
-from a3c.utils import ensure_shared_grads, choose_action, gae
+from a3c.utils import ensure_shared_grads, choose_action
+from a3c.loss import gae
 
 
 LOG_FILE = 'logs/info.log'
