@@ -145,7 +145,7 @@ def test(rank, args, shared_model, counter, device):
             reward_sum = 0
             episode_length = 0
             actions.clear()
-            time.sleep(60.)
+            time.sleep(args.reset_delay)
             state = env.reset()
 
         state = torch.from_numpy(state)

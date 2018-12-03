@@ -98,13 +98,11 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
             state, reward, done, info = env.step(action.item())
 
-            info_log = {}
+            info_log = {'id': args.model_id, 'rank': rank}
             info_log.update(info)
-            info_log.update(vars(args))
             if not os.path.exists(LOG_FILE):
                 logging.basicConfig(filename=LOG_FILE, format='%(asctime)s, %(message)s', level=logging.DEBUG)
-                logging.info(list(info_log.keys()))
-            logging.info(list(info_log.values()))
+            logging.info(info_log)
 
             done = done or episode_length >= args.max_episode_length
             reward = max(min(reward, 50), -50)  # h/t @ArvindSoma
@@ -133,7 +131,6 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
         optimizer.zero_grad()
         loss = gae(R, rewards, values, log_probs, entropies, args)
-        # print(f"PROCESS {rank} loss: {loss.data}")
         (loss).backward()
         nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
 

@@ -45,6 +45,8 @@ parser.add_argument('--debug', action='store_true', help='print versions of esse
 parser.add_argument('--move-set', default='complex', type=str, help='the set of possible actions')
 parser.add_argument('--algorithm', default='A3C', type=str, help='algorithm being used')
 parser.add_argument('--headless', action='store_true', help='use virtual frame buffer')
+parser.add_argument('--reset-delay', type=int, default=60, help='delay between evaluations')
+
 args = parser.parse_args()
 
 
@@ -140,7 +142,7 @@ def main(args):
                 args=(rank, args, shared_model, counter, lock, optimizer, device, False),
             )
         p.start()
-        time.sleep(0.1)
+        time.sleep(1.)
         processes.append(p)
 
     for p in processes:
