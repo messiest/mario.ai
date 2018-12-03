@@ -109,15 +109,6 @@ def main(args):
     counter = mp.Value('i', 0)
     lock = mp.Lock()
 
-    # Queue test process
-    p = mp.Process(
-        target=test,
-        args=(args.num_processes, args, shared_model, counter, 0)
-    )
-
-    p.start()
-    processes.append(p)
-
     # Queue training processes
     num_processes = args.num_processes
     no_sample = args.non_sample  # count of non-sampling processes
@@ -144,6 +135,15 @@ def main(args):
         p.start()
         time.sleep(1.)
         processes.append(p)
+
+    # Queue test process
+    p = mp.Process(
+        target=test,
+        args=(args.num_processes, args, shared_model, counter, 0)
+    )
+
+    p.start()
+    processes.append(p)
 
     for p in processes:
         p.join()
