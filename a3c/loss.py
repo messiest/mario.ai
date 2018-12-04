@@ -24,7 +24,7 @@ def gae(R, rewards, values, log_probs, entropies, args):
         advantage = R - values[i].data
         value_loss = value_loss + 0.5 * advantage.pow(2)
 
-        delta_t = rewards[i] + args.gamma * values[i + 1].data - values[i].data
+        delta_t = rewards[i] + args.gamma * values[i + 1].data.cpu() - values[i].data.cpu()
         if torch.cuda.is_available():
             delta_t = delta_t.cuda()
 
