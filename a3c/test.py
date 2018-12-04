@@ -77,7 +77,7 @@ def test(rank, args, shared_model, counter, device):
             value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
         prob = F.softmax(logit, dim=-1)
-        action = prob.max(-1, keepdim=True)[1].data.numpy()  #  .cpu().numpy()
+        action = prob.max(-1, keepdim=True)[1].cpu().numpy()  #  .data.numpy()
 
         action_out = ACTIONS[args.move_set][action.item()]
 
