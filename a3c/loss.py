@@ -14,15 +14,14 @@ def gae(R, rewards, values, log_probs, entropies, args):
         print('R', R.is_cuda)
         print('values', values[i].is_cuda)
 
-        R = args.gamma * R.detach() + rewards[i]
+        R = args.gamma * R.data + rewards[i]
         if torch.cuda.is_available():
             R = R.cuda()
 
         advantage = R - values[i].detach()
         value_loss = value_loss + 0.5 * advantage.pow(2)
 
-        # delta_t = rewards[i] + args.gamma * values[i + 1].data - values[i].data
-        delta_t = rewards[i] + args.gamma * values[i + 1].detach() - values[i].detach()
+        delta_t = rewards[i] + args.gamma * values[i + 1].data - values[i].data
         if torch.cuda.is_available():
             delta_t = delta_t.cuda()
 
