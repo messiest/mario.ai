@@ -3,8 +3,9 @@ NOTES.md
 playback/openaigym.*
 TEST.py
 deprecated/
-records/
 checkpoints/*.tar
+*.log
+leader_board/
 
 # macOS
 .DS_Store
