@@ -8,12 +8,12 @@ def gae(R, rewards, values, log_probs, entropies, args):
     value_loss = 0
     loss = torch.zeros(1, 1)
     for i in reversed(range(len(rewards))):
-        if torch.cuda.is_available():
-            loss = loss.cuda()
+        # if torch.cuda.is_available():
+        #     loss = loss.cuda()
 
         R = args.gamma * R + rewards[i]
-        if torch.cuda.is_available():
-            R = R.cuda()
+        # if torch.cuda.is_available():
+        #     R = R.cuda()
 
         advantage = R - values[i]
         value_loss = value_loss + 0.5 * advantage.pow(2)
