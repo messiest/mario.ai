@@ -11,7 +11,9 @@ def gae(R, rewards, values, log_probs, entropies, args):
         # if torch.cuda.is_available():
         #     loss = loss.cuda()
 
-        R = args.gamma * R.detach() + rewards[i].detach()
+        print(R.is_cuda)
+
+        R = args.gamma * R.detach() + rewards[i]
         # if torch.cuda.is_available():
         #     R = R.cuda()
 
