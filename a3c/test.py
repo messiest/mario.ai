@@ -15,15 +15,21 @@ from models import ActorCritic
 from mario_actions import ACTIONS
 from mario_wrapper import create_mario_env
 from optimizers import SharedAdam
-from utils import get_epsilon, FontColor, save_checkpoint
+from utils import FontColor, decode_info
 
 from a3c.utils import ensure_shared_grads, choose_action
 
 
-logging.basicConfig(filename='logs/info.log', format='%(asctime)s, %(message)s', level=logging.DEBUG)
-
-
 def test(rank, args, shared_model, counter, device):
+    if not os.path.exists(f'logs/{args.env_name}/'):
+        os.mkdir(f'logs/{args.env_name}/')
+
+    logging.basicConfig(
+        filename=f'logs/{args.env_name}/{args.model_id}.info.log',
+        format='%(asctime)s, %(message)s',
+        level=logging.INFO,
+    )
+
     torch.manual_seed(args.seed + rank)
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
@@ -39,7 +45,10 @@ def test(rank, args, shared_model, counter, device):
         model.cuda()
     model.eval()
 
-    if not os.path.exists(args.save_file):
+    save_file = os.path.join(args.save_dir, args.env_name, args.save_file)
+
+    if not os.path.exists(save_file):
+        os.mkdir(os.path.join(args.save_dir, args.env_name))
         headers = [
             'environment',
             'algorithm',
@@ -50,7 +59,7 @@ def test(rank, args, shared_model, counter, device):
             'episode_length',
         ]
 
-        with open(args.save_file, 'a', newline='') as file:
+        with open(save_file, 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(headers)
 
@@ -90,8 +99,12 @@ def test(rank, args, shared_model, counter, device):
             end='\r',
         )
 
-        info_log = {'id': args.model_id, 'action': action_out, 'reward': reward_sum}
-        info_log.update(info)
+        info_log = {
+            'id': args.model_id,
+            'action': action_out,
+            'reward': reward_sum,
+        }
+        info_log.update(decode_info(env))  #
         logging.info(info_log)
 
         env.render()
@@ -123,7 +136,7 @@ def test(rank, args, shared_model, counter, device):
                 episode_length,  # Episode Step Length
             ]
 
-            with open(args.save_file, 'a', newline='') as file:
+            with open(save_file, 'a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerows([data])
 

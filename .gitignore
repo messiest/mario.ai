@@ -1,7 +1,7 @@
 # project
 NOTES.md
 playback/openaigym.*
-TEST.py
+__TEST__.py
 deprecated/
 checkpoints/*.tar
 *.log

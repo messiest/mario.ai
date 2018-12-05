@@ -4,6 +4,10 @@ import torch
 
 
 def save_checkpoint(model, optimizer, args, n, dir='checkpoints'):
+    save_dir = os.path.join(dir, args.env_name)
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+
     torch.save(
         dict(
             env=args.env_name,
@@ -12,7 +16,7 @@ def save_checkpoint(model, optimizer, args, n, dir='checkpoints'):
             model_state_dict=model.state_dict(),
             optimizer_state_dict=optimizer.state_dict(),
         ),
-        os.path.join(dir, f"{args.env_name}_{args.model_id}_a3c_params.tar")
+        os.path.join(save_dir, f"{args.model_id}_{args.algorithm}_params.tar")
     )
     return True
 

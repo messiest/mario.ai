@@ -8,7 +8,7 @@ from utils.roster import fetch_name
 
 def get_args():
     # Command Line Interface
-    parser = argparse.ArgumentParser(description='A3C')
+    parser = argparse.ArgumentParser(description='mario.ai')
     parser.add_argument('--lr', type=float, default=0.0001, help='learning rate (default: 0.0001)')
     parser.add_argument('--gamma', type=float, default=0.9, help='discount factor for rewards (default: 0.9)')
     parser.add_argument('--tau', type=float, default=1.00, help='parameter for GAE (default: 1.00)')
@@ -27,7 +27,7 @@ def get_args():
     parser.add_argument('--non-sample', type=int, default=int(_mp.cpu_count() / 2), help='number of non sampling processes (default: 2)')
     parser.add_argument('--checkpoint-dir', type=str, default='checkpoints', help='directory to save checkpoints')
     parser.add_argument('--start-step', type=int, default=0, help='training step on which to start')
-    parser.add_argument('--model-id', type=str, default=fetch_name(), help='name id for the model')
+    parser.add_argument('--model-id', type=str, default=None, help='name id for the model')
     parser.add_argument('--start-fresh', action='store_true', help='start training a new model')
     parser.add_argument('--load-model', default=None, type=str, help='model name to restore')
     parser.add_argument('--verbose', action='store_true', help='print actions for debugging')
@@ -36,8 +36,11 @@ def get_args():
     parser.add_argument('--algorithm', default='A3C', type=str, help='algorithm being used')
     parser.add_argument('--headless', action='store_true', help='use virtual frame buffer')
     parser.add_argument('--reset-delay', type=int, default=60, help='delay between evaluations')
-    parser.add_argument('--save-file', type=str, default='records/results.csv', help='file to save results to')
+    parser.add_argument('--save-dir', type=str, default='records', help='file to save results to')
+    parser.add_argument('--save-file', type=str, default='results.csv', help='file to save results to')
 
     args = parser.parse_args()
+
+    args.model_id = fetch_name(args.env_name) if not args.model_id else args.model_id
 
     return args
