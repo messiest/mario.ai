@@ -16,7 +16,7 @@ from models import ActorCritic
 from mario_actions import ACTIONS
 from mario_wrapper import create_mario_env
 from optimizers import SharedAdam
-from utils import FontColor, save_checkpoint
+from utils import FontColor, save_checkpoint, get_epsilon
 
 from a3c.utils import ensure_shared_grads, choose_action
 from a3c.loss import gae
@@ -80,8 +80,14 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             reason = ''
 
             if select_sample:
-                action = prob.multinomial(1)
-                reason = 'random'
+                rand = random.random()
+                epsilon = get_epsilon(step)
+                if rand < epsilon:
+                    action = prob.multinomial(1)
+                    reason = 'random - multinomial'
+                else:
+                    action = torch.randint(0, action_space, (1,1))
+                    reason = 'random - uniform'
             else:
                 action = prob.max(-1, keepdim=True)[1]
                 reason = 'choice'

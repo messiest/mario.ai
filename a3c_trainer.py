@@ -55,7 +55,7 @@ def main(args):
         print("Loading model from checkpoint...")
         print(f"Environment: {args.env_name}")
         print(f"      Agent: {args.model_id}")
-        print(f"      Moves: {args.move_set}")
+        print(f"   Controls: {args.move_set}")
         print(f"      Start: Step {args.start_step}")
         shared_model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -63,7 +63,7 @@ def main(args):
     else:
         print(f"Environment: {args.env_name}")
         print(f"      Agent: {args.model_id}")
-        print(f"      Moves: {args.move_set}")
+        print(f"   Controls: {args.move_set}")
 
     torch.manual_seed(args.seed)
 
