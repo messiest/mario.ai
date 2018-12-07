@@ -1,12 +1,7 @@
 # Used to train a model on AWS
 
-ENVIRONMENT=$1
+ID=$1
 
-echo Training $ENVIRONMENT model...
+echo Training model...
 
-xvfb-run -s "-screen 0 1400x900x24" python a3c_trainer.py --env-name $ENVIRONMENT --record --start-fresh
-
-# git add checkpoints/
-# git add playback/
-# git add save/
-# git commit -a -m "AUTO COMMIT UPDATING $ENVIRONMENT CHECKPOINTS AND RECORDS"
+python a3c_trainer.py --env-name SuperMarioBrosNoFrameskip-1-1-v0 --reset-delay 1 --non-sample 1 --model-id $ID --record

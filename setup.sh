@@ -1,3 +1,5 @@
+sudo apt-get install xvfb libav-tools ffmpeg
+
 conda install pytorch-nightly cuda92 -c pytorch
 conda install torchvision -c pytorch --no-deps
 
