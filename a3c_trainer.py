@@ -46,7 +46,7 @@ def main(args):
     optimizer.share_memory()
 
     if args.load_model:  # TODO Load model before initializing optimizer
-        checkpoint_file = f"{args.env_name}_{args.model_id}_a3c_params.tar"
+        checkpoint_file = f"{args.env_name}/{args.model_id}_{args.algorithm}_params.tar"
         checkpoint = restore_checkpoint(checkpoint_file)
         assert args.env_name == checkpoint['env'], \
             "Checkpoint is for different environment"

@@ -49,9 +49,9 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
     done = True
 
     episode_length = 0
-    for t in count():
-        if t % args.save_interval == 0 and t > 0:  # and rank == 1:
-            save_checkpoint(shared_model, optimizer, args, counter.value)
+    for t in count(start=args.start_step):
+        if t % args.save_interval == 0 and t > 0:
+            save_checkpoint(shared_model, optimizer, args, t)
 
         model.load_state_dict(shared_model.state_dict())
 
@@ -81,13 +81,15 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
             if select_sample:
                 rand = random.random()
-                epsilon = get_epsilon(step)
+                epsilon = get_epsilon(t)
                 if rand < epsilon:
                     action = prob.multinomial(1)
                     reason = 'random - multinomial'
                 else:
                     action = torch.randint(0, action_space, (1,1))
                     reason = 'random - uniform'
+                # print(reason, action)
+
             else:
                 action = prob.max(-1, keepdim=True)[1]
                 reason = 'choice'

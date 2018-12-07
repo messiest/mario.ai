@@ -45,24 +45,6 @@ def test(rank, args, shared_model, counter, device):
         model.cuda()
     model.eval()
 
-    save_file = os.path.join(args.save_dir, args.env_name, args.save_file)
-
-    if not os.path.exists(save_file):
-        os.mkdir(os.path.join(args.save_dir, args.env_name))
-        headers = [
-            'environment',
-            'algorithm',
-            'id',
-            'time',
-            'steps',
-            'reward',
-            'episode_length',
-        ]
-
-        with open(save_file, 'a', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(headers)
-
     state = env.reset()
     state = torch.from_numpy(state)
     reward_sum = 0
@@ -86,11 +68,12 @@ def test(rank, args, shared_model, counter, device):
             value, logit, (hx, cx) = model((state.unsqueeze(0), (hx, cx)))
 
         prob = F.softmax(logit, dim=-1)
-        action = prob.max(-1, keepdim=True)[1].cpu().numpy()  #  .data.numpy()
+        action = prob.max(-1, keepdim=True)[1]
+        # action = prob.max(-1, keepdim=True)[1].cpu().numpy()  #  .data.numpy()
 
         action_out = ACTIONS[args.move_set][action.item()]
 
-        state, reward, done, info = env.step(action[0, 0])  # action.item()
+        state, reward, done, info = env.step(action.item())  # action.item()
 
         reward_sum += reward
 
@@ -98,14 +81,6 @@ def test(rank, args, shared_model, counter, device):
             f"{emojize(':mushroom:')} World {info['world']}-{info['stage']} | {emojize(':video_game:')}: [ {' + '.join(action_out):^13s} ] | ",
             end='\r',
         )
-
-        info_log = {
-            'id': args.model_id,
-            'action': action_out,
-            'reward': reward_sum,
-        }
-        info_log.update(decode_info(env))  #
-        logging.info(info_log)
 
         env.render()
 
@@ -126,19 +101,15 @@ def test(rank, args, shared_model, counter, device):
                 flush=True,
             )
 
-            data = [
-                args.env_name,  # Environment
-                args.algorithm,  # Algorithm
-                args.model_id,  # ID
-                t,  # Time
-                counter.value,  # Total Steps
-                reward_sum,  # Cummulative Reward
-                episode_length,  # Episode Step Length
-            ]
-
-            with open(save_file, 'a', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerows([data])
+            info_log = {
+                'id': args.model_id,
+                'algorithm': args.algorithm,
+                'episode_length': episode_length,
+                'reward': reward_sum,
+                'done': done,
+            }
+            info_log.update(decode_info(env))
+            logging.info(info_log)
 
             reward_sum = 0
             episode_length = 0
