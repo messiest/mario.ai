@@ -6,6 +6,7 @@ deprecated/
 checkpoints/*.tar
 *.log
 leader_board/
+fetch-records.sh
 
 # macOS
 .DS_Store
