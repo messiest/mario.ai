@@ -22,7 +22,7 @@ from a3c.utils import ensure_shared_grads, choose_action
 
 def test(rank, args, shared_model, counter, device):
     if not os.path.exists(f'logs/{args.env_name}/'):
-        os.mkdir(f'logs/{args.env_name}/')
+        os.makedirs(f'logs/{args.env_name}/', exist_ok=True)
 
     logging.basicConfig(
         filename=f'logs/{args.env_name}/{args.model_id}.info.log',
@@ -30,11 +30,13 @@ def test(rank, args, shared_model, counter, device):
         level=logging.INFO,
     )
 
-    torch.manual_seed(args.seed + rank)
+    # torch.manual_seed(args.seed + rank)
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
     if args.record:
-        env = gym.wrappers.Monitor(env, 'playback/', force=True)
+        if not os.path.exists(f'playback/{args.env_name}/'):
+            os.makedirs(f'playback/{args.env_name}/{args.model_id}', exist_ok=True)
+        env = gym.wrappers.Monitor(env, f'playback/{args.env_name}/{args.model_id}/', force=True)
 
     # env.seed(args.seed + rank)
     observation_space = env.observation_space.shape[0]
