@@ -14,6 +14,7 @@ def plot_epsilon_schedule(episodes=1_000_000):
     eps = [get_epsilon(e) for e in range(episodes)]
     plt.figure(figsize=(10, 6), dpi=256)
     plt.plot(eps)
+    
     plt.xlim(0, episodes)
     plt.ylim(0, 1.0)
     plt.title('$\\varepsilon$-greedy Schedule')
