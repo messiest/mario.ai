@@ -80,14 +80,14 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             reason = ''
 
             if select_sample:
-                # rand = random.random()
-                # epsilon = get_epsilon(t)
-                # if rand < epsilon:
-                #     action = torch.randint(0, action_space, (1,1))
-                #     reason = 'random - uniform'
-                # else:
-                action = prob.multinomial(1)
-                reason = 'random - multinomial'
+                rand = random.random()
+                epsilon = get_epsilon(t)
+                if rand < epsilon:
+                    action = torch.randint(0, action_space, (1,1))
+                    reason = 'random - uniform'
+                else:
+                    action = prob.multinomial(1)
+                    reason = 'random - multinomial'
             else:
                 action = prob.max(-1, keepdim=True)[1]
                 reason = 'choice'
