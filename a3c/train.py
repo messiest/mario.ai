@@ -82,7 +82,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
             if select_sample:
                 rand = random.random()
                 epsilon = get_epsilon(t)
-                if rand < epsilon:
+                if rand < epsilon and args.greedy_eps:
                     action = torch.randint(0, action_space, (1,1))
                     reason = 'random - uniform'
                 else:

@@ -14,7 +14,7 @@ def log_parser(log_file=TEST_FILE):
     with open(log_file, 'r') as file:
         for line in file.readlines():
             data_idx = line.index('{')
-            time = line[:data_idx - 2]
+            time = pd.to_datetime(line[:data_idx - 2])
             data = literal_eval(line[data_idx:])
             store['log_time'] += [time]
             for k, v in data.items():
