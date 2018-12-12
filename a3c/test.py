@@ -1,6 +1,7 @@
 import os
 import csv
 import time
+import uuid
 import random
 import logging
 from collections import deque
@@ -25,7 +26,7 @@ def test(rank, args, shared_model, counter, device):
         os.makedirs(f'logs/{args.env_name}/', exist_ok=True)
 
     logging.basicConfig(
-        filename=f'logs/{args.env_name}/{args.model_id}.info.log',
+        filename=f'logs/{args.env_name}/{str(uuid.uuid4())}.{args.model_id}.info.log',
         format='%(asctime)s, %(message)s',
         level=logging.INFO,
     )
