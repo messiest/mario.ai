@@ -16,22 +16,20 @@ from models import ActorCritic
 from mario_actions import ACTIONS
 from mario_wrapper import create_mario_env
 from optimizers import SharedAdam
-from utils import FontColor, decode_info
+from utils import FontColor, decode_info, setup_logger
 
 from a3c.utils import ensure_shared_grads, choose_action
 
 
 def test(rank, args, shared_model, counter, device):
-    if not os.path.exists(f'logs/{args.env_name}/'):
-        os.makedirs(f'logs/{args.env_name}/', exist_ok=True)
+    # time.sleep(10.)
 
-    logging.basicConfig(
-        filename=f'logs/{args.env_name}/{str(uuid.uuid4())}.{args.model_id}.info.log',
-        format='%(asctime)s, %(message)s',
-        level=logging.INFO,
-    )
+    # logging
+    log_dir = f'logs/{args.env_name}/{args.model_id}/{args.uuid}/'
+    info_logger = setup_logger('info', log_dir, f'info.log')
+    result_logger = setup_logger('info', log_dir, f'results.log')
 
-    # torch.manual_seed(args.seed + rank)
+    torch.manual_seed(args.seed + rank)
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
     if args.record:
@@ -76,9 +74,21 @@ def test(rank, args, shared_model, counter, device):
 
         action_out = ACTIONS[args.move_set][action.item()]
 
-        state, reward, done, info = env.step(action.item())  # action.item()
+        state, reward, done, info = env.step(action.item())
 
         reward_sum += reward
+
+        info_log = {
+            'id': args.model_id,
+            'algorithm': args.algorithm,
+            'greedy-eps': args.greedy_eps,
+            'episode': counter.value,
+            'episode_length': episode_length,
+            'reward': reward_sum,
+            'done': done,
+        }
+        info_log.update(decode_info(env))
+        info_logger.info(info_log)
 
         print(
             f"{emojize(':mushroom:')} World {info['world']}-{info['stage']} | {emojize(':video_game:')}: [ {' + '.join(action_out):^13s} ] | ",
@@ -104,15 +114,7 @@ def test(rank, args, shared_model, counter, device):
                 flush=True,
             )
 
-            info_log = {
-                'id': args.model_id,
-                'algorithm': args.algorithm,
-                'episode_length': episode_length,
-                'reward': reward_sum,
-                'done': done,
-            }
-            info_log.update(decode_info(env))
-            logging.info(info_log)
+            result_logger.info(info_log)
 
             reward_sum = 0
             episode_length = 0

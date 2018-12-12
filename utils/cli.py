@@ -1,3 +1,4 @@
+import uuid
 import argparse
 
 import torch
@@ -38,7 +39,9 @@ def get_args():
     parser.add_argument('--reset-delay', type=int, default=60, help='delay between evaluations')
     parser.add_argument('--save-dir', type=str, default='records', help='file to save results to')
     parser.add_argument('--save-file', type=str, default='results.csv', help='file to save results to')
+    parser.add_argument('--uuid', type=str, default=str(uuid.uuid4()), help='uuid for session')
     parser.add_argument('--greedy-eps', action='store_true', help='perform uniform random action according to greedy-epsilon schedule')
+
 
     args = parser.parse_args()
 

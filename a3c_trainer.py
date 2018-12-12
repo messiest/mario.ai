@@ -13,7 +13,7 @@ from models import ActorCritic
 from optimizers import SharedAdam
 from mario_wrapper import create_mario_env
 from a3c import train, test
-from utils import FontColor, fetch_name, debug, restore_checkpoint, cli
+from utils import FontColor, fetch_name, debug, restore_checkpoint, cli, setup_logger
 from mario_actions import ACTIONS
 
 
@@ -25,6 +25,13 @@ args = cli.get_args()
 
 
 def main(args):
+    print(f" Session ID: {args.uuid}")
+
+    # logging
+    log_dir = f'logs/{args.env_name}/{args.model_id}/{args.uuid}/'
+    args_logger = setup_logger('args', log_dir, f'args.log')
+    env_logger = setup_logger('env', log_dir, f'env.log')
+
     if args.debug:
         debug.packages()
     os.environ['OMP_NUM_THREADS'] = "1"
@@ -32,6 +39,9 @@ def main(args):
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         devices = ",".join([str(i) for i in range(torch.cuda.device_count())])
         os.environ["CUDA_VISIBLE_DEVICES"] = devices
+
+    args_logger.info(vars(args))
+    env_logger.info(vars(os.environ))
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
 

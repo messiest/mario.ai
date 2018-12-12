@@ -5,3 +5,4 @@ from utils.transport import save_checkpoint, restore_checkpoint
 from utils.cli import get_args
 from utils.info import decode_info
 from utils.parsers import log_parser, csv_parser
+from utils.logger import setup_logger

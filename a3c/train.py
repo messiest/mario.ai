@@ -16,14 +16,19 @@ from models import ActorCritic
 from mario_actions import ACTIONS
 from mario_wrapper import create_mario_env
 from optimizers import SharedAdam
-from utils import FontColor, save_checkpoint, get_epsilon
+from utils import FontColor, save_checkpoint, get_epsilon, setup_logger
 
 from a3c.utils import ensure_shared_grads, choose_action
 from a3c.loss import gae
 
 
 def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu', select_sample=True):
-    # torch.manual_seed(args.seed + rank)
+    torch.manual_seed(args.seed + rank)
+
+    # logging
+    log_dir = f'logs/{args.env_name}/{args.model_id}/{args.uuid}/'
+    loss_logger = setup_logger('loss', log_dir, f'loss.log')
+    action_logger = setup_logger('actions', log_dir, f'actions.log')
 
     text_color = FontColor.RED if select_sample else FontColor.GREEN
     print(text_color + f"Process: {rank: 3d} | {'Sampling' if select_sample else 'Decision'} | Device: {str(device).upper()}", FontColor.END)
@@ -83,14 +88,23 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
                 rand = random.random()
                 epsilon = get_epsilon(t)
                 if rand < epsilon and args.greedy_eps:
-                    action = torch.randint(0, action_space, (1,1))
-                    reason = 'random - uniform'
+                    action = torch.randint(0, action_space, (1, 1))
+                    reason = 'uniform'
+
                 else:
                     action = prob.multinomial(1)
-                    reason = 'random - multinomial'
+                    reason = 'multinomial'
+
             else:
                 action = prob.max(-1, keepdim=True)[1]
                 reason = 'choice'
+
+            action_logger.info({
+                'rank': rank,
+                'action': action.item(),
+                'reason': reason,
+                })
+
 
             if torch.cuda.is_available():
                 action = action.cuda()
@@ -129,7 +143,11 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
         optimizer.zero_grad()
         loss = gae(R, rewards, values, log_probs, entropies, args)
-        (loss).backward()
+
+        loss_logger.info({'rank': rank, 'loss': loss.item()})
+
+        # (loss).backward()
+        loss.backward()
         nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
 
         ensure_shared_grads(model, shared_model)
