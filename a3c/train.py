@@ -144,7 +144,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         optimizer.zero_grad()
         loss = gae(R, rewards, values, log_probs, entropies, args)
 
-        loss_logger.info({'rank': rank, 'loss': loss.item()})
+        loss_logger.info({'rank': rank, 'sampling': select_sample, 'loss': loss.item()})
 
         # (loss).backward()
         loss.backward()

@@ -62,5 +62,5 @@ def parse_action_logs(model_id, env, log_dir='logs/'):
 
 
 if __name__ == "__main__":
-    data = parse_result_logs('big_mess', 'SuperMarioBrosNoFrameskip-1-1-v0')
+    data = parse_result_logs('danger_noodle', 'SuperMarioBrosNoFrameskip-1-1-v0')
     pprint(data)

@@ -27,7 +27,7 @@ def test(rank, args, shared_model, counter, device):
     # logging
     log_dir = f'logs/{args.env_name}/{args.model_id}/{args.uuid}/'
     info_logger = setup_logger('info', log_dir, f'info.log')
-    result_logger = setup_logger('info', log_dir, f'results.log')
+    result_logger = setup_logger('results', log_dir, f'results.log')
 
     torch.manual_seed(args.seed + rank)
 
