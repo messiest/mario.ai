@@ -5,82 +5,62 @@ import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from parsers import log_parser, csv_parser
+from parsers import parse_loss_logs
 
 
 parser = argparse.ArgumentParser('Mario.ai Plotting')
 parser.add_argument('--env-name', type=str, default='SuperMarioBrosNoFrameskip-1-1-v0', help='environment name to generate plots for')
+parser.add_argument('--model-id', type=str, default='big_mess')
+parser.add_argument('--log-dir', type=str, default='logs/')
 args = parser.parse_args()
 
-# ENV_NAME = 'SuperMarioBrosNoFrameskip-1-2-v0'
 
-
-def main(env):
-    log_dir = os.path.join('logs', env)
+def plot_loss(args):
+    log_dir = os.path.join(args.log_dir, args.env_name)
     assert os.path.exists(log_dir), 'File not found'
 
-    log_files = [f for f in os.listdir(log_dir) if f != '.DS_Store']
+    data = parse_loss_logs(args.model_id, args.env_name, args.log_dir)
 
-    plt.figure(figsize=(20, 12), dpi=256)
-    for log in log_files:
-        print(log, ': reward')
-        log_path = os.path.join(log_dir, log)
-        df = log_parser(log_path)
+    for session in data:
+        print(session)
 
-        model_id = df['id'].iloc[0]
-        level_complete = df['flag_get'].any()
-        episodes = df['done'].sum()
+    # plt.figure(figsize=(20, 12), dpi=256)
+    for session in data:
+        df = pd.DataFrame().from_dict(data[session])
 
-        idx = pd.date_range(df['log_time'].min(), df['log_time'].max(), freq='T')
+        # df['session'] = session
+
+        # df['log_time'] = pd.to_datetime(df['log_time'])
+
+        # idx = pd.date_range(df['log_time'].min(), df['log_time'].max(), freq='T')
+
 
         df = df.set_index('log_time')
-        df = df.reindex(idx, method='pad')
+
         df.index = df.index - df.index[0]
 
-        plt.plot(
-            df.index / pd.Timedelta(hours=1),
-            df['reward'].rolling(15).mean(),
-            label=model_id,
-        )
 
 
-    plt.title(env)
-    plt.ylabel('Reward')
-    plt.xlabel('Elapsed Time\n(hours)')
-    plt.legend();
+        for rank in df['rank'].unique():
+            df_rank = df[df['rank'] == rank]
+            # df_rank = df_rank.reindex(idx, method='pad')
 
-    plt.savefig(f'assets/{env}_rewards.png')
+            plt.plot(
+                df_rank.index / pd.Timedelta(hours=1),
+                df_rank['loss'].rolling(15).mean(),
+                label=rank,
+            )
 
-    plt.figure(figsize=(20, 12), dpi=256)
-    for log in log_files:
-        print(log, ': distance')
+        plt.title(args.env_name + "\n" + session)
+        plt.ylabel('Loss')
+        plt.xlabel('Elapsed Time\n(hours)')
+        plt.legend();
 
-        log_path = os.path.join(log_dir, log)
-        df = log_parser(log_path)
+        plt.show()
 
-        model_id = df['id'].iloc[0]
-        level_complete = df['flag_get'].any()
-        episodes = df['done'].sum()
 
-        idx = pd.date_range(df['log_time'].min(), df['log_time'].max(), freq='T')
-
-        df = df.set_index('log_time')
-        df = df.reindex(idx, method='pad')
-        df.index = df.index - df.index[0]
-
-        plt.plot(
-            df.index / pd.Timedelta(hours=1),
-            (df['x_position'].rolling(30).mean() / 3225),
-            label=f"{model_id} | complete: {level_complete}",
-        )
-
-    plt.title(env)
-    plt.ylabel('Distance\n(percent)')
-    plt.xlabel('Elapsed Time\n(hours)')
-    plt.legend();
-
-    plt.savefig(f'assets/{env}_distance.png')
+        # plt.savefig(f'assets/{env}_rewards.png')
 
 
 if __name__ == "__main__":
-    _ = main(args.env_name)
+    _ = plot_loss(args)
