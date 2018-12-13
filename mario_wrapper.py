@@ -10,6 +10,8 @@ from nes_py.wrappers import BinarySpaceToDiscreteSpaceEnv
 import torch
 from torchvision import transforms
 
+from utils import setup_logger
+
 
 def _process_frame(frame, shape=(84, 84)):
     if frame is not None:
@@ -46,7 +48,7 @@ class ProcessMarioFrame(gym.Wrapper):
 
         # custom reward
         dist = min(max((info['x_pos'] - self.prev_dist), 0), 2)
-        self.prev_dist = info['x_pos'] + 1
+        self.prev_dist = info['x_pos'] # + 1
 
         time = (self.prev_time - info['time']) * -0.1
         self.prev_time = info['time']
@@ -66,9 +68,9 @@ class ProcessMarioFrame(gym.Wrapper):
         flag = 0
         if is_done:
             if info['flag_get']:
-                flag = 50
+                flag = 20
             else:
-                flag = -50
+                flag = -20
 
         reward = dist + time + stat + score + flag
 

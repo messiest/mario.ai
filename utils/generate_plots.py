@@ -10,8 +10,8 @@ from parsers import parse_loss_logs, parse_result_logs
 
 
 parser = argparse.ArgumentParser('Mario.ai Plotting')
-parser.add_argument('--env-name', type=str, default='SuperMarioBrosNoFrameskip-1-1-v0', help='environment name to generate plots for')
-parser.add_argument('--model-id', type=str, default='big_mess')
+parser.add_argument('--env-name', type=str, default='SuperMarioBrosNoFrameskip-v0', help='environment name to generate plots for')
+parser.add_argument('--model-id', type=str, default='murder_log')
 parser.add_argument('--log-dir', type=str, default='logs/')
 args = parser.parse_args()
 
@@ -43,7 +43,7 @@ def plot_loss(args):
 
             plt.plot(
                 df_rank.index / pd.Timedelta(hours=1),
-                df_rank['loss'].rolling(60).mean(),
+                df_rank['loss'].rolling(15).mean(),
                 label=f"Process: {rank}",
             )
 
@@ -87,7 +87,7 @@ def plot_reward(args):
 
         plt.plot(
             df.index / pd.Timedelta(hours=1),
-            df['reward'].rolling(60).mean(),
+            df['reward'].rolling(15).mean(),
             label=f"Session ID: {session}",
         )
 
@@ -106,7 +106,7 @@ def plot_environment_rewards(args):
         for session, session_data in data.items():
             for k, v in session_data.items():
                 master[k] += v
-
+        master['session'] += [session] * len(v)
         return master
 
     log_dir = os.path.join(args.log_dir, args.env_name)
@@ -124,46 +124,51 @@ def plot_environment_rewards(args):
         print(f"{i+1}/{len(models)} | {model}")
         args.model_id = model
         plot_reward(args)
+        plot_loss(args)
         data = parse_result_logs(args.model_id, args.env_name, args.log_dir)
 
         data_store = _combine_data(data, data_store)
 
-    df = pd.DataFrame().from_dict(dict(data_store))
-        #
-        # plt.figure(figsize=(20, 12), dpi=256)
-        # for rank in df['rank'].unique():
-        #     df_rank = df[df['rank'] == rank].copy()
-        #
-        #     df_rank['log_time'] = pd.to_datetime(df_rank['log_time'])
-        #     idx = pd.date_range(df_rank['log_time'].min(), df_rank['log_time'].max(), freq='T')
-        #     df_rank = df_rank.set_index('log_time')
-        #     df_rank = df_rank.reindex(idx, method='pad')
-        #
-        #     df_rank.index = df_rank.index - df_rank.index[0]
-        #
-        #     plt.plot(
-        #         df_rank.index / pd.Timedelta(hours=1),
-        #         df_rank['loss'].rolling(60).mean(),
-        #         label=f"Process: {rank}",
-        #     )
-        #
-        # plt.title(args.env_name + "\n" + session)
-        # plt.ylabel('Loss')
-        # plt.xlabel('Elapsed Time\n(hours)')
-        # plt.legend();
-        #
-        # plt.savefig(os.path.join(save_dir, 'loss.png'))
+    data_store = dict(data_store)
 
-    print(df.head(10))
+    _ = data_store.pop('greedy-eps', None)
+    _ = data_store.pop('episode', None)
+
+    df_master = pd.DataFrame().from_dict(dict(data_store))
+    print(df_master.head(10))
+    plt.figure(figsize=(20, 12), dpi=256)
+    for i, session in enumerate(df_master['session'].unique()):
+        df = df_master[df_master['session'] == session].copy()
+
+        df['log_time'] = pd.to_datetime(df['log_time'])
+        idx = pd.date_range(df['log_time'].min(), df['log_time'].max(), freq='T')
+        df = df.set_index('log_time')
+        df = df.reindex(idx, method='pad')
+
+        df.index = df.index - df.index[0]
+
+        plt.plot(
+            df.index / pd.Timedelta(hours=1),
+            df['reward'].rolling(15).mean(),
+            label=f"{i} | {df['id'].iloc[0]}",
+        )
+
+        del df
+
+    plt.title(args.env_name, fontsize=18)
+    plt.ylabel('Reward')
+    plt.xlabel('Elapsed Time\n(hours)')
+    plt.legend();
+
+    plt.savefig(os.path.join(save_dir, f'{args.env_name}.reward.png'))
+
+
 
 
 
 
 
 if __name__ == "__main__":
-    # print("Plotting loss...")
-    # _ = plot_loss(args)
-    # print("Plotting reward...")
-    # _ = plot_reward(args)
-    print("Plotting environment rewards...")
-    _ = plot_environment_rewards(args)
+    _ = plot_loss(args)
+    _ = plot_reward(args)
+    # _ = plot_environment_rewards(args)

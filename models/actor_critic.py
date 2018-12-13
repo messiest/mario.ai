@@ -19,6 +19,7 @@ def weights_init(model):
         w_bound = np.sqrt(6. / (fan_in + fan_out))
         model.weight.data.uniform_(-w_bound, w_bound)
         model.bias.data.fill_(0)
+
     elif classname.find('Linear') != -1:
         weight_shape = list(model.weight.data.size())
         fan_in = weight_shape[1]
@@ -34,7 +35,6 @@ class ActorCritic(nn.Module):
 
         self.device = 'cpu'
         if torch.cuda.is_available():
-            # self.device = torch.cuda.get_device_name()
             self.device = 'cuda'
 
         self.conv1 = nn.Conv2d(num_inputs, 32, 3, stride=2, padding=1)

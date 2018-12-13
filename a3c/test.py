@@ -29,7 +29,7 @@ def test(rank, args, shared_model, counter, device):
     info_logger = setup_logger('info', log_dir, f'info.log')
     result_logger = setup_logger('results', log_dir, f'results.log')
 
-    torch.manual_seed(args.seed + rank)
+    # torch.manual_seed(args.seed + rank)
 
     env = create_mario_env(args.env_name, ACTIONS[args.move_set])
     if args.record:

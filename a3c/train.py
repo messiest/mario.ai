@@ -23,7 +23,7 @@ from a3c.loss import gae
 
 
 def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu', select_sample=True):
-    torch.manual_seed(args.seed + rank)
+    # torch.manual_seed(args.seed + rank)
 
     # logging
     log_dir = f'logs/{args.env_name}/{args.model_id}/{args.uuid}/'
@@ -58,6 +58,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
         if t % args.save_interval == 0 and t > 0:
             save_checkpoint(shared_model, optimizer, args, t)
 
+        # Sync shared model
         model.load_state_dict(shared_model.state_dict())
 
         if done:
@@ -141,13 +142,14 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
 
         values.append(R)
 
-        optimizer.zero_grad()
         loss = gae(R, rewards, values, log_probs, entropies, args)
 
         loss_logger.info({'rank': rank, 'sampling': select_sample, 'loss': loss.item()})
 
-        # (loss).backward()
-        loss.backward()
+        optimizer.zero_grad()
+
+        (loss).backward()
+        # loss.backward()
         nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
 
         ensure_shared_grads(model, shared_model)
