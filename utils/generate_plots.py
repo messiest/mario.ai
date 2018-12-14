@@ -43,7 +43,7 @@ def plot_loss(args):
 
             plt.plot(
                 df_rank.index / pd.Timedelta(hours=1),
-                df_rank['loss'].rolling(15).mean(),
+                df_rank['loss'].rolling(60).mean(),
                 label=f"Process: {rank}",
             )
 
@@ -58,6 +58,46 @@ def plot_loss(args):
         plt.legend();
 
         plt.savefig(os.path.join(save_dir, 'loss.png'))
+
+
+def plot_distance(args):
+    print(f"Plotting {args.model_id}'s distance...")
+
+    log_dir = os.path.join(args.log_dir, args.env_name)
+    assert os.path.exists(log_dir), 'File not found'
+
+    data = parse_result_logs(args.model_id, args.env_name, args.log_dir)
+
+    for session in data:
+        # saving plots
+        save_dir = os.path.join(log_dir, args.model_id, session, 'plots')
+        os.makedirs(save_dir, exist_ok=True)
+
+        df = pd.DataFrame().from_dict(data[session])
+
+        df['log_time'] = pd.to_datetime(df['log_time'])
+        idx = pd.date_range(df['log_time'].min(), df['log_time'].max(), freq='T')
+
+        df = df.set_index('log_time')
+        df = df.reindex(idx, method='pad')
+
+        df.index = df.index - df.index[0]
+
+        plt.figure(figsize=(20, 12), dpi=256)
+
+        plt.plot(
+            df.index / pd.Timedelta(hours=1),
+            df['x_position'].rolling(60).mean(),
+            label=f"Session ID: {session}",
+        )
+
+        plt.suptitle(args.env_name, fontsize=18, y=.95)
+        plt.title(args.model_id, fontsize=14, x=.5)
+        plt.ylabel('Distance')
+        plt.xlabel('Elapsed Time\n(hours)')
+        plt.legend()
+
+        plt.savefig(os.path.join(save_dir, 'distance.png'))
 
 
 def plot_reward(args):
@@ -87,7 +127,7 @@ def plot_reward(args):
 
         plt.plot(
             df.index / pd.Timedelta(hours=1),
-            df['reward'].rolling(15).mean(),
+            df['reward'].rolling(60).mean(),
             label=f"Session ID: {session}",
         )
 
@@ -125,6 +165,7 @@ def plot_environment_rewards(args):
         args.model_id = model
         plot_reward(args)
         plot_loss(args)
+        plot_distance(args)
         data = parse_result_logs(args.model_id, args.env_name, args.log_dir)
 
         data_store = _combine_data(data, data_store)
@@ -136,6 +177,7 @@ def plot_environment_rewards(args):
 
     df_master = pd.DataFrame().from_dict(dict(data_store))
     print(df_master.head(10))
+    print(df_master.columns)
     plt.figure(figsize=(20, 12), dpi=256)
     for i, session in enumerate(df_master['session'].unique()):
         df = df_master[df_master['session'] == session].copy()
@@ -149,7 +191,7 @@ def plot_environment_rewards(args):
 
         plt.plot(
             df.index / pd.Timedelta(hours=1),
-            df['reward'].rolling(15).mean(),
+            df['reward'].rolling(60).mean(),
             label=f"{i} | {df['id'].iloc[0]}",
         )
 
@@ -163,12 +205,7 @@ def plot_environment_rewards(args):
     plt.savefig(os.path.join(save_dir, f'{args.env_name}.reward.png'))
 
 
-
-
-
-
-
 if __name__ == "__main__":
-    _ = plot_loss(args)
-    _ = plot_reward(args)
-    # _ = plot_environment_rewards(args)
+    # _ = plot_loss(args)
+    # _ = plot_reward(args)
+    _ = plot_environment_rewards(args)
