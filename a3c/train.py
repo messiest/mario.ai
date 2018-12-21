@@ -33,7 +33,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None, device='cpu',
     text_color = FontColor.RED if select_sample else FontColor.GREEN
     print(text_color + f"Process: {rank: 3d} | {'Sampling' if select_sample else 'Decision'} | Device: {str(device).upper()}", FontColor.END)
 
-    env = create_mario_env(args.env_name, ACTIONS[args.move_set])
+    env = create_mario_env(args.env_name, ACTIONS[args.move_set], args.buffer_depth)
     observation_space = env.observation_space.shape[0]
     action_space = env.action_space.n
 

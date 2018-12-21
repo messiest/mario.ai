@@ -86,11 +86,11 @@ class ProcessMarioFrame(gym.Wrapper):
 
 
 class FrameBuffer(gym.Wrapper):
-    def __init__(self, env=None, skip=4, shape=(84, 84)):
+    def __init__(self, env=None, skip=16, shape=(84, 84)):
         super(FrameBuffer, self).__init__(env)
         self.counter = 0
-        self.observation_space = Box(low=0, high=255, shape=(4, 84, 84), dtype=np.uint8)
         self.skip = skip
+        self.observation_space = Box(low=0, high=255, shape=(self.skip, 84, 84), dtype=np.uint8)
         self.buffer = deque(maxlen=self.skip)
 
     def step(self, action):
@@ -109,7 +109,7 @@ class FrameBuffer(gym.Wrapper):
                 self.buffer.append(obs)
 
         frame = np.stack(self.buffer, axis=0)
-        frame = np.reshape(frame, (4, 84, 84))
+        frame = np.reshape(frame, (self.skip, 84, 84))
 
         return frame, total_reward, is_done, info
 
@@ -120,7 +120,7 @@ class FrameBuffer(gym.Wrapper):
             self.buffer.append(obs)
 
         frame = np.stack(self.buffer, axis=0)
-        frame = np.reshape(frame, (4, 84, 84))
+        frame = np.reshape(frame, (self.skip, 84, 84))
 
         return frame
 
@@ -148,15 +148,15 @@ class NormalizedEnv(gym.ObservationWrapper):
             return obs
 
 
-def wrap_mario(env):
+def wrap_mario(env, buffer_depth):
     env = ProcessMarioFrame(env)
     env = NormalizedEnv(env)
-    env = FrameBuffer(env)
+    env = FrameBuffer(env, buffer_depth)
     return env
 
 
-def create_mario_env(env_id, move_set=COMPLEX_MOVEMENT):
+def create_mario_env(env_id, move_set=COMPLEX_MOVEMENT, skip=4):
     env = gym_super_mario_bros.make(env_id)
     env = BinarySpaceToDiscreteSpaceEnv(env, move_set)
-    env = wrap_mario(env)
+    env = wrap_mario(env, skip)
     return env

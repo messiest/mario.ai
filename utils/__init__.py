@@ -7,3 +7,4 @@ from utils.info import decode_info
 # from utils.parsers import log_parser, csv_parser
 from utils.logger import setup_logger
 from utils.parsers import parse_loss_logs
+from utils.generate_plots import plot_loss, plot_reward

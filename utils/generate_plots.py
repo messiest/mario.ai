@@ -6,14 +6,8 @@ from collections import defaultdict
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from parsers import parse_loss_logs, parse_result_logs
-
-
-parser = argparse.ArgumentParser('Mario.ai Plotting')
-parser.add_argument('--env-name', type=str, default='SuperMarioBrosNoFrameskip-v0', help='environment name to generate plots for')
-parser.add_argument('--model-id', type=str, default='murder_log')
-parser.add_argument('--log-dir', type=str, default='logs/')
-args = parser.parse_args()
+from utils import get_args
+from utils.parsers import parse_loss_logs, parse_result_logs
 
 
 def plot_loss(args):
@@ -206,6 +200,11 @@ def plot_environment_rewards(args):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser('Mario.ai Plotting')
+    parser.add_argument('--env-name', type=str, default='SuperMarioBrosNoFrameskip-v0', help='environment name to generate plots for')
+    parser.add_argument('--model-id', type=str, default='murder_log')
+    parser.add_argument('--log-dir', type=str, default='logs/')
+    args = parser.parse_args()
     # _ = plot_loss(args)
     # _ = plot_reward(args)
     _ = plot_environment_rewards(args)

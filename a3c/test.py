@@ -22,7 +22,7 @@ from a3c.utils import ensure_shared_grads, choose_action
 
 
 def test(rank, args, shared_model, counter, device):
-    # time.sleep(10.)
+    time.sleep(2.)
 
     # logging
     log_dir = f'logs/{args.env_name}/{args.model_id}/{args.uuid}/'
@@ -31,7 +31,7 @@ def test(rank, args, shared_model, counter, device):
 
     # torch.manual_seed(args.seed + rank)
 
-    env = create_mario_env(args.env_name, ACTIONS[args.move_set])
+    env = create_mario_env(args.env_name, ACTIONS[args.move_set], args.buffer_depth)
     if args.record:
         if not os.path.exists(f'playback/{args.env_name}/'):
             os.makedirs(f'playback/{args.env_name}/{args.model_id}', exist_ok=True)

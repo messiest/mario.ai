@@ -13,7 +13,7 @@ from models import ActorCritic
 from optimizers import SharedAdam
 from mario_wrapper import create_mario_env
 from a3c import train, test
-from utils import FontColor, fetch_name, debug, restore_checkpoint, cli, setup_logger
+from utils import FontColor, fetch_name, debug, restore_checkpoint, cli, setup_logger, plot_loss, plot_reward
 from mario_actions import ACTIONS
 
 
@@ -43,7 +43,7 @@ def main(args):
     args_logger.info(vars(args))
     env_logger.info(vars(os.environ))
 
-    env = create_mario_env(args.env_name, ACTIONS[args.move_set])
+    env = create_mario_env(args.env_name, ACTIONS[args.move_set], args.buffer_depth)
 
     shared_model = ActorCritic(env.observation_space.shape[0], env.action_space.n)
 
@@ -140,4 +140,6 @@ if __name__ == "__main__":
         if not os.getenv('DISPLAY'):
             vdisplay.stop()
     finally:
+        # plot_loss(args)
+        # plot_reward(args)
         print("Done.")
